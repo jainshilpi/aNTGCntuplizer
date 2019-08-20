@@ -318,6 +318,7 @@ if (eleSingleFilters.size() == 0) {
     // edm::Handle<std::string> filterLabels_;
     // e.getByLabel("slimmedPatTrigger:filterLabels", filterLabels_);
 
+    /*
     for (pat::TriggerObjectStandAlone obj : *triggerHandleMiniAOD) {
         obj.unpackFilterLabels(e, *trgResultsHandle);
 
@@ -398,7 +399,9 @@ if (eleSingleFilters.size() == 0) {
           }
       }
   }
+    */
 }
+
 
 ULong64_t ggNtuplizer::matchSingleElectronTriggerFilters(double pt, double eta, double phi) {
     // bits in the return value correspond to decisions from filters defined above

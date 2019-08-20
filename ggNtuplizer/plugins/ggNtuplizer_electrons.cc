@@ -69,7 +69,13 @@ vector<UChar_t>  eleIDbit_;
 // vector<float>  eleResol_phi_up_;
 // vector<float>  eleResol_phi_dn_;
 vector<Short_t> eleGenIndex_;
-
+vector<float>  eleIDMVANonTrg_;
+vector<float>  eleSCEta_;
+vector<float>  eleSCPhi_;
+vector<float>  eleSCRawEn_;
+vector<float>  eleSCEtaWidth_;
+vector<float>  eleSCPhiWidth_;
+vector<float>  eleSCEn_;
 
 void ggNtuplizer::branchesElectrons(TTree* tree) {
 
@@ -77,7 +83,7 @@ void ggNtuplizer::branchesElectrons(TTree* tree) {
   tree->Branch("eleCharge",               &eleCharge_);
   // tree->Branch("eleChargeConsistent",     &eleChargeConsistent_);
   tree->Branch("eleEn",                   &eleEn_);
-  // tree->Branch("eleSCEn",                 &eleSCEn_);
+  tree->Branch("eleSCEn",                 &eleSCEn_);
   tree->Branch("eleEcalEn",               &eleEcalEn_);
   tree->Branch("elePt",                   &elePt_);
   tree->Branch("elePtError",              &elePtError_);
@@ -87,11 +93,11 @@ void ggNtuplizer::branchesElectrons(TTree* tree) {
   tree->Branch("eleCalibPt",              &eleCalibPt_);
   tree->Branch("eleCalibEn",              &eleCalibEn_);
   tree->Branch("eleSCindex",              &eleSCindex_);
-  // tree->Branch("eleSCEta",                &eleSCEta_);
-  // tree->Branch("eleSCPhi",                &eleSCPhi_);
-  // tree->Branch("eleSCRawEn",              &eleSCRawEn_);
-  // tree->Branch("eleSCEtaWidth",           &eleSCEtaWidth_);
-  // tree->Branch("eleSCPhiWidth",           &eleSCPhiWidth_);
+  tree->Branch("eleSCEta",                &eleSCEta_);
+  tree->Branch("eleSCPhi",                &eleSCPhi_);
+  tree->Branch("eleSCRawEn",              &eleSCRawEn_);
+  tree->Branch("eleSCEtaWidth",           &eleSCEtaWidth_);
+  tree->Branch("eleSCPhiWidth",           &eleSCPhiWidth_);
   tree->Branch("eleHoverE",               &eleHoverE_);
   tree->Branch("eleEoverP",               &eleEoverP_);
   tree->Branch("eleEoverPout",            &eleEoverPout_);
@@ -119,6 +125,9 @@ void ggNtuplizer::branchesElectrons(TTree* tree) {
   tree->Branch("eleFiredDoubleTrgs",          &eleFiredDoubleTrgs_);
   tree->Branch("eleFiredL1Trgs",              &eleFiredL1Trgs_);
   tree->Branch("eleIDbit",                    &eleIDbit_);
+  
+  tree->Branch("eleIDMVANonTrg",          &eleIDMVANonTrg_);
+  
   // tree->Branch("eleScale_stat_up",            &eleScale_stat_up_);
   // tree->Branch("eleScale_stat_dn",            &eleScale_stat_dn_);
   // tree->Branch("eleScale_syst_up",            &eleScale_syst_up_);
@@ -133,6 +142,7 @@ void ggNtuplizer::branchesElectrons(TTree* tree) {
     tree->Branch("eleGenIndex",          &eleGenIndex_);
   }
 
+
 }
 
 void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, math::XYZPoint &pv) {
@@ -141,7 +151,7 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
   eleCharge_                  .clear();
   // eleChargeConsistent_        .clear();
   eleEn_                      .clear();
-  // eleSCEn_                    .clear();
+  eleSCEn_                    .clear();
   eleEcalEn_                  .clear();
   elePt_                      .clear();
   elePtError_                 .clear();
@@ -151,11 +161,11 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
   eleCalibPt_                 .clear();
   eleCalibEn_                 .clear();
   eleSCindex_                 .clear();
-  // eleSCEta_                   .clear();
-  // eleSCPhi_                   .clear();
-  // eleSCRawEn_                 .clear();
-  // eleSCEtaWidth_              .clear();
-  // eleSCPhiWidth_              .clear();
+  eleSCEta_                   .clear();
+  eleSCPhi_                   .clear();
+  eleSCRawEn_                 .clear();
+  eleSCEtaWidth_              .clear();
+  eleSCPhiWidth_              .clear();
   eleHoverE_                  .clear();
   eleEoverP_                  .clear();
   eleEoverPout_               .clear();
@@ -183,6 +193,7 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
   eleFiredDoubleTrgs_         .clear();
   eleFiredL1Trgs_             .clear();
   eleIDbit_                   .clear();
+  eleIDMVANonTrg_             .clear();
   // eleScale_stat_up_           .clear();
   // eleScale_stat_dn_           .clear();
   // eleScale_syst_up_           .clear();
@@ -213,15 +224,30 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
   EcalClusterLazyTools       lazyTool    (e, es, ebReducedRecHitCollection_, eeReducedRecHitCollection_, esReducedRecHitCollection_);
   noZS::EcalClusterLazyTools lazyToolnoZS(e, es, ebReducedRecHitCollection_, eeReducedRecHitCollection_, esReducedRecHitCollection_);
 
+
+  edm::Handle<edm::ValueMap<bool> >  veto_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  loose_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  medium_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  tight_id_decisions; 
+  edm::Handle<edm::ValueMap<bool> >  heep_id_decisions;
+  edm::Handle<edm::ValueMap<float> > eleMVAValues;
+  
+  e.getByToken(eleVetoIdMapToken_ ,   veto_id_decisions);
+  e.getByToken(eleLooseIdMapToken_ ,  loose_id_decisions);
+  e.getByToken(eleMediumIdMapToken_,  medium_id_decisions);
+  e.getByToken(eleTightIdMapToken_,   tight_id_decisions);
+  e.getByToken(eleHEEPIdMapToken_ ,   heep_id_decisions);
+  e.getByToken(eleMVAValuesMapToken_, eleMVAValues);
+
   for (edm::View<pat::Electron>::const_iterator iEle = electronHandle->begin(); iEle != electronHandle->end(); ++iEle) {
 
     eleCharge_          .push_back(iEle->charge());
     // eleChargeConsistent_.push_back(iEle->isGsfCtfScPixChargeConsistent());
     eleEn_              .push_back(iEle->energy());
-    eleCalibEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));
+    //eleCalibEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));
     elePt_              .push_back(iEle->pt());
-    eleCalibPt_         .push_back(iEle->userFloat("ecalTrkEnergyPostCorr")*iEle->pt()/iEle->p());
-    elePtError_         .push_back(iEle->userFloat("ecalTrkEnergyErrPostCorr")*iEle->pt()/iEle->p());
+    //eleCalibPt_         .push_back(iEle->userFloat("ecalTrkEnergyPostCorr")*iEle->pt()/iEle->p());
+    //elePtError_         .push_back(iEle->userFloat("ecalTrkEnergyErrPostCorr")*iEle->pt()/iEle->p());
     eleEta_             .push_back(iEle->eta());
     elePhi_             .push_back(iEle->phi());
     eleR9_              .push_back(iEle->r9());
@@ -293,6 +319,7 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
     // eleResol_phi_up_ .push_back(iEle->userFloat("energySigmaPhiUp"));
     // eleResol_phi_dn_ .push_back(iEle->userFloat("energySigmaPhiDown"));
 
+    /*
     // VID decisions
     UChar_t tmpeleIDbit = 0;
     bool isPassVeto   = iEle->electronID("cutBasedElectronID-Fall17-94X-V2-veto");
@@ -309,6 +336,36 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
 
     eleIDMVAIso_  .push_back(iEle->userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values"));
     eleIDMVANoIso_.push_back(iEle->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values"));
+    */
+
+
+    const auto el = electronHandle->ptrAt(nEle_);
+    
+    UChar_t tmpeleIDbit = 0; 
+    
+    bool isPassVeto  = (*veto_id_decisions)[el->originalObjectRef()];
+    if(isPassVeto) setbit(tmpeleIDbit, 0);
+    //cout<<"isVeto: "<<isPassVeto<<endl;
+
+    bool isPassLoose  = (*loose_id_decisions)[el->originalObjectRef()];
+    if(isPassLoose) setbit(tmpeleIDbit, 1);
+    //cout<<"isLoose: "<<isPassLoose<<endl;
+
+    bool isPassMedium = (*medium_id_decisions)[el->originalObjectRef()];
+    if(isPassMedium) setbit(tmpeleIDbit, 2);
+    //cout<<"isMedium: "<<isPassMedium<<endl;
+
+    bool isPassTight  = (*tight_id_decisions)[el->originalObjectRef()];
+    if(isPassTight) setbit(tmpeleIDbit, 3);
+    //cout<<"isTight: "<<isPassTight<<endl;
+
+    bool isPassHEEP = (*heep_id_decisions)[el->originalObjectRef()];
+    if(isPassHEEP) setbit(tmpeleIDbit, 4);
+    //cout<<"isHeep: "<<isPassHEEP<<endl;
+
+    eleIDMVANonTrg_.push_back((*eleMVAValues)[el->originalObjectRef()]);
+
+
     elePFClusEcalIso_.push_back(iEle->ecalPFClusterIso());
     elePFClusHcalIso_.push_back(iEle->hcalPFClusterIso());
 

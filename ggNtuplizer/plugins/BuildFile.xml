@@ -40,6 +40,12 @@
 <use name="SimTracker/Records"/>
 <use name="SimTracker/TrackerHitAssociation"/>
 <use name="TrackingTools/IPTools"/>
+<use name="DataFormats/HcalRecHit"/>
+<use name="DataFormats/HcalDetId"/>
+<use name="DataFormats/GeometryVector"/>  
+<use name="Geometry/Records"/>
+<use name="DataFormats/CSCRecHit"/>
+
 <use name="heppdt"/>
 <use name="root"/>
 <use name="boost"/>

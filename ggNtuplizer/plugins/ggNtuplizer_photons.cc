@@ -57,7 +57,13 @@ vector<Float_t>    phoResol_rho_dn_;
 vector<Float_t>    phoResol_phi_up_;
 vector<Float_t>    phoResol_phi_dn_;
 vector<Short_t> pho_gen_index_;
-
+vector<float>  phoSCEta_;
+vector<float>  phoSCPhi_;
+vector<float>  phoSCEtaWidth_;
+vector<float>  phoSCPhiWidth_;
+vector<float>  phoSCBrem_;
+vector<float>  phoSCE_;
+vector<float>  phoSCRawE_;
 
 //Necessary for the Photon Footprint removal
 template <class T, class U>
@@ -127,6 +133,15 @@ void ggNtuplizer::branchesPhotons(TTree* tree) {
   tree->Branch("phoResol_phi_up",  &phoResol_phi_up_);
   tree->Branch("phoResol_phi_dn",  &phoResol_phi_dn_);
 
+  tree->Branch("phoSCEta",                &phoSCEta_);
+  tree->Branch("phoSCPhi",                &phoSCPhi_);
+  tree->Branch("phoSCE",                  &phoSCE_);
+  tree->Branch("phoSCEtaWidth",           &phoSCEtaWidth_);
+  tree->Branch("phoSCPhiWidth",           &phoSCPhiWidth_);
+  tree->Branch("phoSCBrem",               &phoSCBrem_);
+  tree->Branch("phoSCRawE",               &phoSCRawE_);
+
+
   if(doGenParticles_){
     tree->Branch("pho_gen_index",  &pho_gen_index_);
   }
@@ -188,6 +203,14 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
   phoResol_phi_dn_ .clear();
   pho_gen_index_.clear();
 
+  phoSCE_               .clear();
+  phoSCEta_             .clear();
+  phoSCPhi_             .clear();
+  phoSCEtaWidth_        .clear();
+  phoSCPhiWidth_        .clear();
+  phoSCBrem_            .clear();
+  phoSCRawE_            .clear();
+
   nPho_ = 0;
 
   edm::Handle<edm::View<pat::Photon> > photonHandle;
@@ -204,6 +227,37 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
   edm::Handle<std::vector<reco::SuperCluster>> ecalSChandle;
   e.getByToken(ecalSCcollection_, ecalSChandle);
 
+  ///specific for AOD////
+  edm::Handle<edm::ValueMap<bool> >  loose_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  medium_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  tight_id_decisions;
+  edm::Handle<edm::ValueMap<float> > mvaValues;
+  edm::Handle<edm::ValueMap<float> > phoChargedIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoNeutralHadronIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoPhotonIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoWorstChargedIsolationMap;
+
+  e.getByToken(phoLooseIdMapToken_ ,  loose_id_decisions);
+  e.getByToken(phoMediumIdMapToken_,  medium_id_decisions);
+  e.getByToken(phoTightIdMapToken_ ,  tight_id_decisions);
+  e.getByToken(phoMVAValuesMapToken_, mvaValues);
+
+  e.getByToken(phoChargedIsolationToken_,       phoChargedIsolationMap);
+  e.getByToken(phoNeutralHadronIsolationToken_, phoNeutralHadronIsolationMap);
+  e.getByToken(phoPhotonIsolationToken_,        phoPhotonIsolationMap);
+  e.getByToken(phoWorstChargedIsolationToken_,  phoWorstChargedIsolationMap);
+  
+
+  ///END of specific for AOD///
+
+  /*
+  edm::Handle<std::vector<reco::SuperCluster>> ecalSChandleEB;
+  e.getByToken(ecalSCcollectionEB_, ecalSChandleEB);
+
+  edm::Handle<std::vector<reco::SuperCluster>> ecalSChandleEE;
+  e.getByToken(ecalSCcollectionEE_, ecalSChandleEE);
+  */
+
   EcalClusterLazyTools       lazyTool    (e, es, ebReducedRecHitCollection_, eeReducedRecHitCollection_, esReducedRecHitCollection_);
   noZS::EcalClusterLazyTools lazyToolnoZS(e, es, ebReducedRecHitCollection_, eeReducedRecHitCollection_, esReducedRecHitCollection_);
 
@@ -212,15 +266,23 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     // if(iPho->et() < 15.) continue;
 
     phoE_             .push_back(iPho->energy());
-    phoCalibE_        .push_back(iPho->userFloat("ecalEnergyPostCorr"));
+    //phoCalibE_        .push_back(iPho->userFloat("ecalEnergyPostCorr"));
     phoEt_            .push_back(iPho->et());
-    phoCalibEt_       .push_back(iPho->et()*iPho->userFloat("ecalEnergyPostCorr")/iPho->energy());
-    phoSigmaE_        .push_back(iPho->userFloat("ecalEnergyErrPreCorr"));
-    phoSigmaCalibE_   .push_back(iPho->userFloat("ecalEnergyErrPostCorr"));
+    //phoCalibEt_       .push_back(iPho->et()*iPho->userFloat("ecalEnergyPostCorr")/iPho->energy());
+    //phoSigmaE_        .push_back(iPho->userFloat("ecalEnergyErrPreCorr"));
+    //phoSigmaCalibE_   .push_back(iPho->userFloat("ecalEnergyErrPostCorr"));
     phoEta_           .push_back(iPho->eta());
     phoPhi_           .push_back(iPho->phi());
     phoESEnP1_        .push_back(iPho->superCluster()->preshowerEnergyPlane1());
     phoESEnP2_        .push_back(iPho->superCluster()->preshowerEnergyPlane2());
+
+    phoSCE_           .push_back(iPho->superCluster()->energy());
+    phoSCRawE_        .push_back(iPho->superCluster()->rawEnergy());
+    phoSCEta_         .push_back(iPho->superCluster()->eta());
+    phoSCPhi_         .push_back(iPho->superCluster()->phi());
+    phoSCEtaWidth_    .push_back(iPho->superCluster()->etaWidth());
+    phoSCPhiWidth_    .push_back(iPho->superCluster()->phiWidth());
+    phoSCBrem_        .push_back(iPho->superCluster()->phiWidth()/iPho->superCluster()->etaWidth());
 
     UChar_t _phoQualityBits = 0;
     if(iPho->hasPixelSeed()) setbit(_phoQualityBits, 0);
@@ -230,11 +292,43 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     phoR9_            .push_back(iPho->r9());
     phoHoverE_        .push_back(iPho->hadTowOverEm());
     phoESEffSigmaRR_  .push_back(lazyTool.eseffsirir(*(iPho->superCluster())));
-    phoPFChIso_       .push_back(iPho->userFloat("phoChargedIsolation"));
+
+    /*phoPFChIso_       .push_back(iPho->userFloat("phoChargedIsolation"));
     phoPFPhoIso_      .push_back(iPho->userFloat("phoPhotonIsolation"));
     phoPFNeuIso_      .push_back(iPho->userFloat("phoNeutralHadronIsolation"));
     phoPFChWorstIso_  .push_back(iPho->userFloat("phoWorstChargedIsolation"));
     phoIDMVA_         .push_back(iPho->userFloat("PhotonMVAEstimatorRunIIFall17v2Values"));
+    */
+
+
+    const auto pho = photonHandle->ptrAt(nPho_);
+    phoPFChIso_              .push_back((*phoChargedIsolationMap)[pho->originalObjectRef()]);
+    phoPFPhoIso_             .push_back((*phoPhotonIsolationMap)[pho->originalObjectRef()]);
+    phoPFNeuIso_             .push_back((*phoNeutralHadronIsolationMap)[pho->originalObjectRef()]);
+    phoPFChWorstIso_         .push_back((*phoWorstChargedIsolationMap)[pho->originalObjectRef()]);
+
+    
+    // VID decisions
+    UShort_t tmpphoIDbit = 0;
+    //cout<<"Photons "<<endl;
+    bool isPassLoose  = (*loose_id_decisions)[pho->originalObjectRef()];
+    if(isPassLoose) setbit(tmpphoIDbit, 0);
+    //cout<<"isPassLoose "<<isPassLoose<<endl;
+
+    bool isPassMedium = (*medium_id_decisions)[pho->originalObjectRef()];
+    if(isPassMedium) setbit(tmpphoIDbit, 1);
+    //cout<<"isPassMedium "<<isPassMedium<<endl;
+
+    bool isPassTight  = (*tight_id_decisions)[pho->originalObjectRef()];
+    if(isPassTight) setbit(tmpphoIDbit, 2);
+    //cout<<"isPassTight "<<isPassTight<<endl;
+
+    if (!(iPho->mipIsHalo()))  setbit(tmpphoIDbit, 7);
+    
+    phoIDbit_.push_back(tmpphoIDbit);    
+    
+    phoIDMVA_.push_back((*mvaValues)[pho->originalObjectRef()]);
+
 
     phoSeedBCE_        .push_back(iPho->superCluster()->seed()->energy());
     phoSeedBCEta_      .push_back(iPho->superCluster()->seed()->eta());
@@ -246,7 +340,9 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     phoMIPNhitCone_    .push_back(iPho->mipNhitCone());
 
 
+    
     // get photon supercluster index (for looking up from the SC branches)
+    /*
     if(ecalSChandle.isValid()){
       const reco::SuperCluster * _tmpPhoSC = (iPho->superCluster().isAvailable()) ? iPho->superCluster().get() : nullptr;
       Short_t tmpPhoSCindex = (_tmpPhoSC == nullptr) ? -999 : std::distance(ecalSChandle->begin(), (std::vector<reco::SuperCluster>::const_iterator) _tmpPhoSC);
@@ -256,7 +352,8 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
       //   std::cout<<_tmpPhoSC->eta()<<" "<<(ecalSChandle->begin()+tmpPhoSCindex)->eta()<<" "<<_tmpPhoSC->phi()<<" "<<(ecalSChandle->begin()+tmpPhoSCindex)->phi()<<std::endl;
       // }
     }
-
+    */
+    
     UChar_t tmpphoFiducialRegion = 0;
     if(iPho->isEB()) setbit(tmpphoFiducialRegion, 0);
     if(iPho->isEE()) setbit(tmpphoFiducialRegion, 1);
@@ -267,7 +364,7 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     if(iPho->isEERingGap()) setbit(tmpphoFiducialRegion, 6);
     phoFiducialRegion_  .push_back(tmpphoFiducialRegion);
 
-
+    /*
     // VID decisions
     UShort_t tmpphoIDbit = 0;
     // if(year_ == 2017){
@@ -286,9 +383,10 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     // if (isPassMVAisov2wp80)  setbit(tmpphoIDbit, 5);
     // bool isPassMVAisov2wp90  = iPho->photonID("mvaPhoID-Fall17-iso-V2-wp90");
     // if (isPassMVAisov2wp90)  setbit(tmpphoIDbit, 6);
-    if (!(iPho->mipIsHalo()))  setbit(tmpphoIDbit, 7);
 
+    if (!(iPho->mipIsHalo()))  setbit(tmpphoIDbit, 7);
     phoIDbit_.push_back(tmpphoIDbit);
+
 
 
     // systematics for energy scale and resolution
@@ -302,6 +400,7 @@ void ggNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es) {
     phoResol_rho_dn_ .push_back(iPho->userFloat("energySigmaRhoDown"));
     phoResol_phi_up_ .push_back(iPho->userFloat("energySigmaPhiUp"));
     phoResol_phi_dn_ .push_back(iPho->userFloat("energySigmaPhiDown"));
+    */
 
     ///////////////////////////////SATURATED/UNSATURATED ///from ggFlash////
     DetId seed = (iPho->superCluster()->seed()->hitsAndFractions())[0].first;
