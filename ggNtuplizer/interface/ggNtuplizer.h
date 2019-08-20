@@ -36,6 +36,12 @@
 #include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
+#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "DataFormats/CSCRecHit/interface/CSCSegmentCollection.h"
+
 #include "iterator"
 
 using namespace std;
@@ -86,7 +92,8 @@ private:
   void branchesAK4CHSJets       (TTree*);
   // void branchesAK4PUPPIJets       (TTree*);
   void branchesAK8PUPPIJets    (TTree*);
-
+  void branchesRecHit(TTree* tree);
+  
   void fillGlobalEvent(const edm::Event&, const edm::EventSetup&);
   void fillGenInfo    (const edm::Event&);
   void fillGenPart    (const edm::Event&);
@@ -102,6 +109,7 @@ private:
   void branchesGenAK8JetPart(TTree*);
   void fillGenAK4JetInfo(const edm::Event&, Float_t );
   void fillGenAK8JetInfo(const edm::Event&, Float_t );
+  void fillRecHits(const edm::Event& e, const edm::EventSetup& es);
 
   Float_t ECALrecHitE( const DetId & id, const EcalRecHitCollection *recHits, int di = 0, int dj = 0);
   Float_t swissCross(const DetId& id, noZS::EcalClusterLazyTools & ltNoZS);
@@ -111,6 +119,7 @@ private:
   void fillECALOOTSC(const edm::Event& e, const edm::EventSetup& es);
   Float_t getLICTD(const reco::SuperCluster *sc, noZS::EcalClusterLazyTools & ltNoZS, Float_t &_maxEnXtalTime, UChar_t & _nL1Spike, UChar_t & _nDiweird, UChar_t & _nWeird, UChar_t & _nSaturated, UChar_t & _nOutOfTime, UChar_t & _nXtals, UChar_t & _maxEnXtalBits, Float_t & _maxEnXtalSwissCross);
 
+  
   // void fillAK4PUPPIJets       (const edm::Event&, const edm::EventSetup&);
   // void fillAK8PUPPIJets    (const edm::Event&, const edm::EventSetup&);
 
@@ -129,6 +138,7 @@ private:
   bool dumpSoftDrop_;
   bool dumpPDFSystWeight_;
   bool dumpHFElectrons_;
+  bool doRecHits_;
   int  year_;
   Bool_t doOOTphotons_;
 
@@ -162,7 +172,11 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection>           eeReducedRecHitCollection_;
   edm::EDGetTokenT<EcalRecHitCollection>           esReducedRecHitCollection_;
   edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSCcollection_;
+  edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSCcollectionEB_;
+  edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSCcollectionEE_;
   edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSC_OOT_collection_;
+  edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSC_OOT_collectionEB_;
+  edm::EDGetTokenT<std::vector<reco::SuperCluster>>           ecalSC_OOT_collectionEE_;
   edm::EDGetTokenT<reco::PhotonCollection>         recophotonCollection_;
   edm::EDGetTokenT<reco::TrackCollection>          tracklabel_;
   edm::EDGetTokenT<reco::GsfElectronCollection>     gsfElectronlabel_;
@@ -179,6 +193,12 @@ private:
   edm::EDGetTokenT<pat::PackedCandidateCollection>  pckPFCandidateCollection_;
   edm::EDGetTokenT<Bool_t>                          ecalBadCalibFilterUpdateToken_;
 
+  edm::EDGetTokenT<HBHERecHitCollection>          hbheRecHitCollection_;
+  edm::EDGetTokenT<HORecHitCollection>            hoRecHitCollection_;
+  edm::EDGetTokenT<HFRecHitCollection>            hfRecHitCollection_;
+
+  edm::EDGetTokenT<CSCSegmentCollection>         cscSegmentsCollection_;
+
   Bool_t                                            getECALprefiringWeights_;
   edm::EDGetTokenT<double>                          prefweight_token;
   edm::EDGetTokenT<double>                          prefweightup_token;
@@ -191,6 +211,28 @@ private:
   //check
   edm::EDGetToken gsfEle_;
 
+
+  // photon ID decision objects and isolations
+  edm::EDGetTokenT<edm::ValueMap<bool> >  phoLooseIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  phoMediumIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  phoTightIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > phoMVAValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > phoChargedIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > phoNeutralHadronIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > phoPhotonIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > phoWorstChargedIsolationToken_; 
+
+  // elecontr ID decisions objects
+  edm::EDGetTokenT<edm::ValueMap<bool> >  eleVetoIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  eleLooseIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  eleMediumIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  eleTightIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  eleHEEPIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > eleMVAValuesMapToken_;
+
+  edm::ESHandle<CaloGeometry>          pG_;
+  
+
   TTree   *tree_;
   TH1F    *hEvents_;
   TH1F    *hPU_;
@@ -200,6 +242,9 @@ private:
   TH1F    *hSumGenWeight_;
 
   HLTPrescaleProvider hltPrescaleProvider_;
+
+  bool debug;
+  
 };
 
 #endif
