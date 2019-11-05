@@ -494,7 +494,7 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
   eerhE_.clear();                 
   eerhiEta_.clear();
   eerhiPhi_.clear();
-  esrhZside_.clear();
+  eerhZside_.clear();
 
   eerhEta_.clear();
   eerhPhi_.clear();
