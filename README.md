@@ -4,6 +4,14 @@
 
 ##### To work with CMSSW_10_2_10 and head version, you do :
 
+### changes/points to note:
+## (1) No L1 prefiring weights are available for 2018, so still using 2017 weights. SO DO NOT USE THE L1 PREFIRING WEIGHTS FOR 2018 RIGHT NOW 
+## (2) Using JET TOOL BOX for 102X from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetToolbox#How_to_run_the_jetToolbox
+## (3)Added random number for jet smearing - taken originally from ggNtuplizer's 102X branch
+## (4) Included lines: <flags LCG_DICT_HEADER="classes.h"/>
+## <flags LCG_DICT_XML="classes_def.xml"/> to build LCG dictionary (i.e. vector<vector<char> >)  by hand in ggNtuplizer/plugins. Not needed in 94X 
+## corrected era in EgammaPostProcessing tools. 
+  
 cmsrel CMSSW_10_2_10 <br>	
 cd CMSSW_10_2_10/src <br>
 cmsenv <br>
@@ -17,8 +25,9 @@ rm EgammaAnalysis/ElectronTools/data -rf <br>
 git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools.git EgammaAnalysis/ElectronTools/data <br>
 scram b -j 8 <br>
 git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X <br>
+git clone git@github.com:cms-jet/JetToolbox.git JMEAnalysis/JetToolbox -b jetToolbox_102X_v2
 git clone https://github.com/cmkuo/HiggsAnalysis.git <br>
-git clone -b 102X https://github.com/cmkuo/ggAnalysis.git <br>
+git clone -b 102X_2018 https://github.com/jainshilpi/aNTGCntuplizer.git <br>
 scram b -j 8 <br>
 
 The above code stores the decision in 64 integer. Each bit represents a decision<br>
