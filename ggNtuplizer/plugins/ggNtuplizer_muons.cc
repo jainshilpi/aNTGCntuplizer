@@ -5,13 +5,13 @@
 using namespace std;
 
 // (local) variables associated with tree branches
-Int_t             nMu_;
+UShort_t             nMu_;
 vector<float>     muPt_;
 vector<float>     muEn_;
 vector<float>     muEta_;
 vector<float>     muPhi_;
-vector<int>       muCharge_;
-vector<int>       muType_;
+vector<Char_t>       muCharge_;
+vector<Short_t>       muType_;
 vector<int>       muIDbit_;
 vector<float>     muD0_;
 vector<float>     muDz_;
@@ -19,22 +19,18 @@ vector<float>     muSIP_;
 vector<float>     muChi2NDF_;
 vector<float>     muInnerD0_;
 vector<float>     muInnerDz_;
-vector<int>       muTrkLayers_;
-vector<int>       muPixelLayers_;
-vector<int>       muPixelHits_;
-vector<int>       muMuonHits_;
-vector<int>       muStations_;
-vector<int>       muMatches_;
-vector<int>       muTrkQuality_;
+vector<Short_t>       muTrkLayers_;
+vector<Short_t>       muPixelLayers_;
+vector<Short_t>       muPixelHits_;
+vector<Short_t>       muMuonHits_;
+vector<Short_t>       muStations_;
+vector<Short_t>       muMatches_;
+vector<Char_t>       muTrkQuality_;
 vector<float>     muIsoTrk_;
 vector<float>     muPFChIso_;
 vector<float>     muPFPhoIso_;
 vector<float>     muPFNeuIso_;
 vector<float>     muPFPUIso_;
-vector<float>     muPFChIso03_;
-vector<float>     muPFPhoIso03_;
-vector<float>     muPFNeuIso03_;
-vector<float>     muPFPUIso03_;
 vector<ULong64_t> muFiredTrgs_;
 vector<ULong64_t> muFiredL1Trgs_;
 vector<float>     muInnervalidFraction_;
@@ -43,7 +39,8 @@ vector<float>     muchi2LocalPosition_;
 vector<float>     mutrkKink_;
 vector<float>     muBestTrkPtError_;
 vector<float>     muBestTrkPt_;
-vector<int>       muBestTrkType_;
+vector<Char_t>       muBestTrkType_;
+vector<Short_t> muGenIndex_;
 
 void ggNtuplizer::branchesMuons(TTree* tree) {
 
@@ -73,10 +70,6 @@ void ggNtuplizer::branchesMuons(TTree* tree) {
   tree->Branch("muPFPhoIso",    &muPFPhoIso_);
   tree->Branch("muPFNeuIso",    &muPFNeuIso_);
   tree->Branch("muPFPUIso",     &muPFPUIso_);
-  tree->Branch("muPFChIso03",   &muPFChIso03_);
-  tree->Branch("muPFPhoIso03",  &muPFPhoIso03_);
-  tree->Branch("muPFNeuIso03",  &muPFNeuIso03_);
-  tree->Branch("muPFPUIso03",   &muPFPUIso03_);
   tree->Branch("muFiredTrgs",   &muFiredTrgs_);
   tree->Branch("muFiredL1Trgs", &muFiredL1Trgs_);
   tree->Branch("muInnervalidFraction",   &muInnervalidFraction_);
@@ -86,6 +79,9 @@ void ggNtuplizer::branchesMuons(TTree* tree) {
   tree->Branch("muBestTrkPtError",       &muBestTrkPtError_);
   tree->Branch("muBestTrkPt",            &muBestTrkPt_);
   tree->Branch("muBestTrkType",          &muBestTrkType_);
+  if(doGenParticles_){
+    tree->Branch("muGenIndex",          &muGenIndex_);
+  }
 }
 
 void ggNtuplizer::fillMuons(const edm::Event& e, math::XYZPoint& pv, reco::Vertex vtx) {
@@ -116,10 +112,6 @@ void ggNtuplizer::fillMuons(const edm::Event& e, math::XYZPoint& pv, reco::Verte
   muPFPhoIso_            .clear();
   muPFNeuIso_            .clear();
   muPFPUIso_             .clear();
-  muPFChIso03_           .clear();
-  muPFPhoIso03_          .clear();
-  muPFNeuIso03_          .clear();
-  muPFPUIso03_           .clear();
   muFiredTrgs_           .clear();
   muFiredL1Trgs_         .clear();
   muInnervalidFraction_  .clear();
@@ -129,6 +121,7 @@ void ggNtuplizer::fillMuons(const edm::Event& e, math::XYZPoint& pv, reco::Verte
   muBestTrkPtError_      .clear();
   muBestTrkPt_           .clear();
   muBestTrkType_         .clear();
+  muGenIndex_.clear();
 
   nMu_ = 0;
 
@@ -145,8 +138,8 @@ void ggNtuplizer::fillMuons(const edm::Event& e, math::XYZPoint& pv, reco::Verte
 
   for (edm::View<pat::Muon>::const_iterator iMu = muonHandle->begin(); iMu != muonHandle->end(); ++iMu) {
 
-    if (iMu->pt() < 3) continue;
-    if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
+    // if (iMu->pt() < 3) continue;
+    // if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
 
     muPt_    .push_back(iMu->pt());
     muEn_    .push_back(iMu->energy());
@@ -231,10 +224,14 @@ void ggNtuplizer::fillMuons(const edm::Event& e, math::XYZPoint& pv, reco::Verte
     muPFPhoIso_   .push_back(iMu->pfIsolationR04().sumPhotonEt);
     muPFNeuIso_   .push_back(iMu->pfIsolationR04().sumNeutralHadronEt);
     muPFPUIso_    .push_back(iMu->pfIsolationR04().sumPUPt);
-    muPFChIso03_  .push_back(iMu->pfIsolationR03().sumChargedHadronPt);
-    muPFPhoIso03_ .push_back(iMu->pfIsolationR03().sumPhotonEt);
-    muPFNeuIso03_ .push_back(iMu->pfIsolationR03().sumNeutralHadronEt);
-    muPFPUIso03_  .push_back(iMu->pfIsolationR03().sumPUPt);
+
+    if(doGenParticles_){
+      edm::Handle<vector<reco::GenParticle>> genParticlesHandle;
+      e.getByToken(genParticlesCollection_, genParticlesHandle);
+      const reco::GenParticle * muGen_ = iMu->genParticle();
+      Short_t muGenPos_ = (muGen_ == nullptr) ? -999 : std::distance(genParticlesHandle->begin(), (vector<reco::GenParticle>::const_iterator) muGen_);
+      muGenIndex_.push_back(muGenPos_);
+    }
 
     nMu_++;
   }

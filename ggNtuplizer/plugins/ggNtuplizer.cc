@@ -3,85 +3,96 @@
 using namespace std;
 using namespace edm;
 
-void setbit(UShort_t& x, UShort_t bit) {
-  UShort_t a = 1;
-  x |= (a << bit);
-}
+void ggNtuplizer::endJob() {
+  tree_->BuildIndex("run", "event");
+  std::cout<<"\tTTree "<<tree_->GetName()<<" indexed on run and event."<<std::endl<<" Complete!"<<std::endl;
+};
+
 
 ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) :
-  hltPrescaleProvider_(ps, consumesCollector(), *this)
+hltPrescaleProvider_(ps, consumesCollector(), *this)
 {
 
-  development_               = ps.getParameter<bool>("development");
-  addFilterInfoMINIAOD_      = ps.getParameter<bool>("addFilterInfoMINIAOD");
-  doNoHFMET_                 = ps.getParameter<bool>("doNoHFMET");
+  getECALprefiringWeights_      = ps.getParameter<bool>("getECALprefiringWeights");
+  if(getECALprefiringWeights_){
+    prefweight_token              = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProb"));
+    prefweightup_token            = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProbUp"));
+    prefweightdown_token          = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProbDown"));
+  }
 
-  doGenParticles_            = ps.getParameter<bool>("doGenParticles");
-  runOnParticleGun_          = ps.getParameter<bool>("runOnParticleGun");
-  runOnSherpa_               = ps.getParameter<bool>("runOnSherpa");
-  runL1ECALPrefire_          = ps.getParameter<bool>("runL1ECALPrefire");
-  dumpPFPhotons_             = ps.getParameter<bool>("dumpPFPhotons");
-  dumpJets_                  = ps.getParameter<bool>("dumpJets");
-  dumpAK8Jets_               = ps.getParameter<bool>("dumpAK8Jets");
-  dumpSoftDrop_              = ps.getParameter<bool>("dumpSoftDrop");
-  dumpTaus_                  = ps.getParameter<bool>("dumpTaus");
-  dumpPDFSystWeight_         = ps.getParameter<bool>("dumpPDFSystWeight");
-  dumpHFElectrons_           = ps.getParameter<bool>("dumpHFElectrons");
-  year_                      = ps.getParameter<int>("year");
 
-  trgFilterDeltaPtCut_       = ps.getParameter<double>("trgFilterDeltaPtCut");
-  trgFilterDeltaRCut_        = ps.getParameter<double>("trgFilterDeltaRCut");
+  development_                = ps.getParameter<bool>("development");
+  addFilterInfoAOD_           = ps.getParameter<bool>("addFilterInfoAOD");
+  addFilterInfoMINIAOD_       = ps.getParameter<bool>("addFilterInfoMINIAOD");
+  doNoHFMET_                  = ps.getParameter<bool>("doNoHFMET");
 
-  vtxLabel_                  = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxLabel"));
-  vtxBSLabel_                = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxBSLabel"));
-  rhoLabel_                  = consumes<double>                        (ps.getParameter<InputTag>("rhoLabel"));
-  rhoCentralLabel_           = consumes<double>                        (ps.getParameter<InputTag>("rhoCentralLabel"));
-  trgEventLabel_             = consumes<trigger::TriggerEvent>         (ps.getParameter<InputTag>("triggerEvent"));
-  triggerObjectsLabel_       = consumes<pat::TriggerObjectStandAloneCollection>(ps.getParameter<edm::InputTag>("triggerEvent"));
-  trgResultsLabel_           = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("triggerResults"));
-  patTrgResultsLabel_        = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("patTriggerResults"));
-  trgResultsProcess_         =                                          ps.getParameter<InputTag>("triggerResults").process();
-  generatorLabel_            = consumes<GenEventInfoProduct>           (ps.getParameter<InputTag>("generatorLabel"));
-  lheEventLabel_             = consumes<LHEEventProduct>               (ps.getParameter<InputTag>("LHEEventLabel"));
-  puCollection_              = consumes<vector<PileupSummaryInfo> >    (ps.getParameter<InputTag>("pileupCollection"));
-  genParticlesCollection_    = consumes<vector<reco::GenParticle> >    (ps.getParameter<InputTag>("genParticleSrc"));
-  pfMETlabel_                = consumes<View<pat::MET> >               (ps.getParameter<InputTag>("pfMETLabel"));
-  electronCollection_        = consumes<View<pat::Electron> >          (ps.getParameter<InputTag>("electronSrc"));
-  gsfTracks_                 = consumes<View<reco::GsfTrack>>          (ps.getParameter<InputTag>("gsfTrackSrc"));
 
-  ecalBadCalibFilterUpdate_  = consumes<bool>                          (ps.getParameter<InputTag>("ecalBadCalibReducedMINIAODFilter"));
+  doOOTphotons_               = ps.getParameter<bool>("doOOTphotons");
+  doGenParticles_             = ps.getParameter<bool>("doGenParticles");
+  runOnParticleGun_           = ps.getParameter<bool>("runOnParticleGun");
+  runOnSherpa_                = ps.getParameter<bool>("runOnSherpa");
+  dumpPFPhotons_              = ps.getParameter<bool>("dumpPFPhotons");
+  dumpJets_                   = ps.getParameter<bool>("dumpJets");
+  dumpAK8Jets_                = ps.getParameter<bool>("dumpAK8Jets");
+  dumpSoftDrop_               = ps.getParameter<bool>("dumpSoftDrop");
+  dumpTaus_                   = ps.getParameter<bool>("dumpTaus");
+  dumpPDFSystWeight_          = ps.getParameter<bool>("dumpPDFSystWeight");
+  dumpHFElectrons_            = ps.getParameter<bool>("dumpHFElectrons");
+  year_                       = ps.getParameter<int>("year");
 
-  photonCollection_          = consumes<View<pat::Photon> >            (ps.getParameter<InputTag>("photonSrc"));
-  muonCollection_            = consumes<View<pat::Muon> >              (ps.getParameter<InputTag>("muonSrc"));
-  ebReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("ebReducedRecHitCollection"));
-  eeReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("eeReducedRecHitCollection"));
-  esReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("esReducedRecHitCollection")); 
-  recophotonCollection_      = consumes<reco::PhotonCollection>        (ps.getParameter<InputTag>("recoPhotonSrc"));
-  tracklabel_                = consumes<reco::TrackCollection>         (ps.getParameter<InputTag>("TrackLabel"));
-  gsfElectronlabel_          = consumes<reco::GsfElectronCollection>   (ps.getParameter<InputTag>("gsfElectronLabel"));
-  tauCollection_             = consumes<vector<pat::Tau> >             (ps.getParameter<InputTag>("tauSrc"));
-  pfAllParticles_            = consumes<reco::PFCandidateCollection>   (ps.getParameter<InputTag>("PFAllCandidates"));
-  pckPFCandidateCollection_  = consumes<pat::PackedCandidateCollection>(ps.getParameter<InputTag>("packedPFCands"));
-  pckPFCdsLabel_             = consumes<vector<pat::PackedCandidate>>  (ps.getParameter<InputTag>("packedPFCands"));
-  recoCdsLabel_              = consumes<View<reco::Candidate>>         (ps.getParameter<InputTag>("packedPFCands"));
+  trgFilterDeltaPtCut_        = ps.getParameter<double>("trgFilterDeltaPtCut");
+  trgFilterDeltaRCut_         = ps.getParameter<double>("trgFilterDeltaRCut");
 
-  jetsAK4Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak4JetSrc"));
-  jetsAK8Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak8JetSrc"));
-  //boostedDoubleSVLabel_      = consumes<reco::JetTagCollection>        (ps.getParameter<InputTag>("boostedDoubleSVLabel"));
-  newparticles_              =                                          ps.getParameter< vector<int > >("newParticles");
-  //jecAK8PayloadNames_        =                                          ps.getParameter<std::vector<std::string> >("jecAK8PayloadNames"); 
+  beamHaloSummaryToken_       = consumes<reco::BeamHaloSummary>         (ps.getParameter<InputTag>("beamHaloSummary"));
+  vtxLabel_                   = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxLabel"));
+  vtxBSLabel_                 = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxBSLabel"));
+  rhoLabel_                   = consumes<double>                        (ps.getParameter<InputTag>("rhoLabel"));
+  rhoCentralLabel_            = consumes<double>                        (ps.getParameter<InputTag>("rhoCentralLabel"));
+  // trgEventLabel_              = consumes<trigger::TriggerEvent>         (ps.getParameter<InputTag>("triggerEvent"));
+  triggerObjectsLabel_        = consumes<pat::TriggerObjectStandAloneCollection>(ps.getParameter<edm::InputTag>("triggerEvent"));
+  trgResultsLabel_            = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("triggerResults"));
+  patTrgResultsLabel_         = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("patTriggerResults"));
+  trgResultsProcess_          =                                          ps.getParameter<InputTag>("triggerResults").process();
+  generatorLabel_             = consumes<GenEventInfoProduct>           (ps.getParameter<InputTag>("generatorLabel"));
+  lheEventLabel_              = consumes<LHEEventProduct>               (ps.getParameter<InputTag>("LHEEventLabel"));
+  puCollection_               = consumes<vector<PileupSummaryInfo> >    (ps.getParameter<InputTag>("pileupCollection"));
+  genParticlesCollection_     = consumes<vector<reco::GenParticle> >    (ps.getParameter<InputTag>("genParticleSrc"));
+  pfMETlabel_                 = consumes<View<pat::MET> >               (ps.getParameter<InputTag>("pfMETLabel"));
+  electronCollection_         = consumes<View<pat::Electron> >          (ps.getParameter<InputTag>("electronSrc"));
+  gsfTracks_                  = consumes<View<reco::GsfTrack>>          (ps.getParameter<InputTag>("gsfTrackSrc"));
 
-  //pfLooseId_                 = ps.getParameter<ParameterSet>("pfLooseId");
+  BadChCandFilterToken_       = consumes<bool>                          (ps.getParameter<InputTag>("BadChargedCandidateFilter"));
+  BadPFMuonFilterToken_       = consumes<bool>                          (ps.getParameter<edm::InputTag>("BadPFMuonFilter"));
 
-  prefweight_token_          = consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProb"));
-  prefweightup_token_        = consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProbUp"));
-  prefweightdown_token_      = consumes<double>(edm::InputTag("prefiringweight:nonPrefiringProbDown"));
+  photonCollection_           = consumes<View<pat::Photon> >            (ps.getParameter<InputTag>("photonSrc"));
+  photonOOTCollection_        = consumes<View<pat::Photon> >            (ps.getParameter<InputTag>("photonOOTSrc"));
+  muonCollection_             = consumes<View<pat::Muon> >              (ps.getParameter<InputTag>("muonSrc"));
+  ebReducedRecHitCollection_  = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("ebReducedRecHitCollection"));
+  eeReducedRecHitCollection_  = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("eeReducedRecHitCollection"));
+  esReducedRecHitCollection_  = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("esReducedRecHitCollection"));
+  ecalSCcollection_           = consumes<std::vector<reco::SuperCluster>>(ps.getParameter<InputTag>("ecalSCcollection"));
+  ecalSC_OOT_collection_      = consumes<std::vector<reco::SuperCluster>>(ps.getParameter<InputTag>("ecalSCOOTcollection"));
+  recophotonCollection_       = consumes<reco::PhotonCollection>        (ps.getParameter<InputTag>("recoPhotonSrc"));
+  tracklabel_                 = consumes<reco::TrackCollection>         (ps.getParameter<InputTag>("TrackLabel"));
+  gsfElectronlabel_           = consumes<reco::GsfElectronCollection>   (ps.getParameter<InputTag>("gsfElectronLabel"));
+  tauCollection_              = consumes<vector<pat::Tau> >             (ps.getParameter<InputTag>("tauSrc"));
+  pfAllParticles_             = consumes<reco::PFCandidateCollection>   (ps.getParameter<InputTag>("PFAllCandidates"));
+  pckPFCandidateCollection_   = consumes<pat::PackedCandidateCollection>(ps.getParameter<InputTag>("packedPFCands"));
+  pckPFCdsLabel_              = consumes<vector<pat::PackedCandidate>>  (ps.getParameter<InputTag>("packedPFCands"));
+  recoCdsLabel_               = consumes<View<reco::Candidate>>         (ps.getParameter<InputTag>("packedPFCands"));
 
-  cicPhotonId_ = new CiCPhotonID(ps);
+  ak4PFJetsCHSLabel_          = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak4PFJetsCHSSrc"));
+  ak4PFJetsPUPPILabel_        = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak4PFJetsPUPPISrc"));
+  ak8JetsPUPPILabel_          = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak8JetsPUPPISrc"));
+
+  ak4PFJetsCHSGenJetLabel_    = consumes<std::vector<reco::GenJet> >    (ps.getParameter<InputTag>("ak4PFJetsCHSGenJetLabel"));
+  ak8GenJetLabel_             = consumes<std::vector<reco::GenJet> >    (ps.getParameter<InputTag>("ak8GenJetLabel"));
+  newparticles_               =                                          ps.getParameter< vector<int > >("newParticles");
+  ecalBadCalibFilterUpdateToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("ecalBadCalibFilter"));
 
   Service<TFileService> fs;
-  tree_    = fs->make<TTree>("EventTree", "Event data (tag V10_02_10_04)");
-  hEvents_ = fs->make<TH1F>("hEvents",    "total processed and skimmed events",   2,  0,   2);
+  tree_    = fs->make<TTree>("EventTree", "Event data");
+  hEvents_ = fs->make<TH1F>("hEvents",    "total processed and skimmed events",   2,  0,   1);
 
   branchesGlobalEvent(tree_);
 
@@ -89,34 +100,30 @@ ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) :
     branchesGenInfo(tree_, fs);
     branchesGenPart(tree_);
   }
-  
+  if(dumpJets_ && doGenParticles_) branchesGenAK4JetPart(tree_);
+  if(dumpAK8Jets_ && doGenParticles_) branchesGenAK8JetPart(tree_);
   branchesMET(tree_);
   branchesPhotons(tree_);
+  branchesPhoECALSC(tree_);
+  branchesECALSC(tree_);
+  if(doOOTphotons_) {
+    branchesPhotonsOOT(tree_);
+    branchesootPhoECALSC(tree_);
+    branchesECALOOTSC(tree_);
+  }
   branchesElectrons(tree_);
+  branchesEleECALSC(tree_);
   branchesMuons(tree_);
-  if (dumpPFPhotons_)   branchesPFPhotons(tree_);
-  if (dumpHFElectrons_) branchesHFElectrons(tree_);
-  if (dumpTaus_)        branchesTaus(tree_);
-  if (dumpJets_)        branchesJets(tree_);
-  if (dumpAK8Jets_)     branchesAK8Jets(tree_);
-
+  if (dumpJets_)        branchesAK4CHSJets(tree_);
+  if (dumpAK8Jets_)     branchesAK8PUPPIJets(tree_);
 }
 
 ggNtuplizer::~ggNtuplizer() {
-  cleanupPhotons();
-  delete cicPhotonId_;
 }
 
 void ggNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es) {
 
-  hEvents_->Fill(0.5);
-
-  if (doGenParticles_) {
-    jetResolution_   = JME::JetResolution::get(es, "AK4PFchs_pt");
-    jetResolutionSF_ = JME::JetResolutionScaleFactor::get(es, "AK4PFchs");
-    AK8jetResolution_   = JME::JetResolution::get(es, "AK8PFchs_pt");
-    AK8jetResolutionSF_ = JME::JetResolutionScaleFactor::get(es, "AK8PFchs");
-  }
+  hEvents_->Fill(0.2);
 
   edm::Handle<reco::VertexCollection> vtxHandle;
   e.getByToken(vtxLabel_, vtxHandle);
@@ -147,17 +154,24 @@ void ggNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es) {
   }
 
   fillMET(e, es);
-  fillElectrons(e, es, pv);
   fillMuons(e, pv, vtx);
-  fillPhotons(e, es); 
-  if (dumpPFPhotons_)    fillPFPhotons(e, es);
-  if (dumpHFElectrons_ ) fillHFElectrons(e);
-  if (dumpTaus_)         fillTaus(e);
-  if (dumpJets_)         fillJets(e,es);
-  if (dumpAK8Jets_)      fillAK8Jets(e,es);
+  fillECALSC(e, es);
+  fillPhotons(e, es);
+  resolvePhoECALSCindex();
+  fillElectrons(e, es, pv);
+  resolveEleECALSCindex();
+  if(doOOTphotons_) {
+    fillPhotonsOOT(e, es);
+    fillECALOOTSC(e, es);
+    resolveootPhoECALSCindex();
+  }
+  if (dumpJets_) fillAK4CHSJets(e,es);
+  if (dumpAK8Jets_) fillAK8PUPPIJets(e,es);
+  if(dumpJets_ && doGenParticles_) fillGenAK4JetInfo(e, vtx.z());
+  if(dumpAK8Jets_ && doGenParticles_) fillGenAK8JetInfo(e, vtx.z());
 
-  hEvents_->Fill(1.5);
   tree_->Fill();
+  hEvents_->Fill(0.8);
 
 }
 

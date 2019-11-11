@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Finished importing CMSSW configuration /afs/cern.ch/work/m/mwadud/private/naTGC/CMSSW_9_4_13/src/ggAnalysis/ggNtuplizer/test/run_mc2017_94X.py
+Sending the request to the server
+Success: Your task has been delivered to the CRAB3 server.
+Task name: 190318_145231:mwadud_crab_QCD_HT50to100_TuneCP5_13TeV-madgraphMLM-pythia8
+Project dir: /afs/cern.ch/work/m/mwadud/private/naTGC/CMSSW_9_4_13/src/ggAnalysis/ggNtuplizer/test/crab_submit/jobs/QCD_HT50to100_TuneCP5_13TeV-madgraphMLM-pythia8/crab_QCD_HT50to100_TuneCP5_13TeV-madgraphMLM-pythia8
+Please use 'crab status -d /afs/cern.ch/work/m/mwadud/private/naTGC/CMSSW_9_4_13/src/ggAnalysis/ggNtuplizer/test/crab_submit/jobs/QCD_HT50to100_TuneCP5_13TeV-madgraphMLM-pythia8/crab_QCD_HT50to100_TuneCP5_13TeV-madgraphMLM-pythia8' to check how the submission process proceeds. 

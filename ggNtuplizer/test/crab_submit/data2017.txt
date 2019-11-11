@@ -1,0 +1,5 @@
+/SinglePhoton/Run2017B-17Nov2017-v1/MINIAOD
+/SinglePhoton/Run2017C-17Nov2017-v1/MINIAOD
+/SinglePhoton/Run2017D-17Nov2017-v1/MINIAOD
+/SinglePhoton/Run2017E-17Nov2017-v1/MINIAOD
+/SinglePhoton/Run2017F-17Nov2017-v1/MINIAOD

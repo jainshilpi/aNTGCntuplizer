@@ -18,7 +18,7 @@ void GenParticleParentage::getParentageRecursive(const reco::GenParticleRef& p, 
   //if( p->pt() < 0.1 ) return;  // reached initial state quarks/proton
 
   // do not count a copy of the particle, and do not start with the particle itself :)
-  if ( std::abs(daughterId) != std::abs(p->pdgId()) && daughterId != 0 ) {    
+  if ( std::abs(daughterId) != std::abs(p->pdgId()) && daughterId != 0 ) {
     switch(std::abs(p->pdgId()))  {
     case 12:
     case 14:
@@ -76,8 +76,8 @@ void GenParticleParentage::getParentageRecursive(const reco::GenParticleRef& p, 
     }
   }
 
-  if ( daughterId != 0 && 
-       !_realParent.isNonnull() && 
+  if ( daughterId != 0 &&
+       !_realParent.isNonnull() &&
        p->pdgId() != daughterId ) {
     _realParent = p;
   }
@@ -93,7 +93,7 @@ void GenParticleParentage::getParentageRecursive(const reco::GenParticleRef& p, 
 
 void GenParticleParentage::resolveParentage() {
   auto lp = _leptonParents.cbegin();
-  auto lpend = _leptonParents.cend();  
+  auto lpend = _leptonParents.cend();
   for( ; lp != lpend; ++lp ) {
     if( lp == _leptonParents.cbegin() ) {
       _leptonParent = *lp;
@@ -103,68 +103,68 @@ void GenParticleParentage::resolveParentage() {
   }
 
   auto qp = _qcdParents.cbegin();
-  auto qpend = _qcdParents.cend(); 
-  for( ; qp != qpend; ++qp ) {    
+  auto qpend = _qcdParents.cend();
+  for( ; qp != qpend; ++qp ) {
     if( qp == _qcdParents.cbegin() ) {
       _qcdParent = *qp;
     } else if( hasAsParent(_qcdParent,*qp) ) {
       _qcdParent = *qp;
-    }    
+    }
   }
 
   auto ep = _ewkBosonParents.cbegin();
-  auto epend = _ewkBosonParents.cend();  
-  for( ; ep != epend; ++ep ) {     
+  auto epend = _ewkBosonParents.cend();
+  for( ; ep != epend; ++ep ) {
     if( ep == _ewkBosonParents.cbegin() ) {
       _ewkBosonParent = *ep;
     } else if( hasAsParent(_ewkBosonParent,*ep) ) {
       _ewkBosonParent = *ep;
-    }   
+    }
   }
-  
+
   auto np = _nonPromptParents.cbegin();
   auto npend = _nonPromptParents.cend();
-  for( ; np != npend; ++np ) {    
+  for( ; np != npend; ++np ) {
     if( np == _nonPromptParents.cbegin() ) {
       _nonPromptParent = *np;
     } else if( hasAsParent(_nonPromptParent,*np) ) {
       _nonPromptParent = *np;
-    }   
+    }
   }
 
   auto exo = _exoticParents.cbegin();
   auto exoend = _exoticParents.cend();
-  for( ; exo != exoend; ++exo ) {    
+  for( ; exo != exoend; ++exo ) {
     if( exo == _exoticParents.cbegin() ) {
       _exoticParent = *exo;
     } else if( hasAsParent(_exoticParent,*exo) ) {
       _exoticParent = *exo;
-    }   
+    }
   }
   /*
   std::cout << "Best parents:" << std::endl;
   if( _leptonParent.isNonnull() && _leptonParent.isAvailable() ) {
-    std::cout << "Lepton Parent: " << _leptonParent->pdgId() << ' ' 
-	      << _leptonParent->status() << std::endl;
+    std::cout << "Lepton Parent: " << _leptonParent->pdgId() << ' '
+        << _leptonParent->status() << std::endl;
   }
   if( _qcdParent.isNonnull() && _qcdParent.isAvailable() ) {
-    std::cout << "QCD Parent: " << _qcdParent->pdgId() << ' ' 
-	      << _qcdParent->status() << std::endl;
+    std::cout << "QCD Parent: " << _qcdParent->pdgId() << ' '
+        << _qcdParent->status() << std::endl;
   }
   if( _ewkBosonParent.isNonnull() && _ewkBosonParent.isAvailable() ) {
-    std::cout << "EWK Boson Parent: " << _ewkBosonParent->pdgId() << ' ' 
-	      << _ewkBosonParent->status() << std::endl;
+    std::cout << "EWK Boson Parent: " << _ewkBosonParent->pdgId() << ' '
+        << _ewkBosonParent->status() << std::endl;
   }
   if( _nonPromptParent.isNonnull() && _nonPromptParent.isAvailable() ) {
-    std::cout << "NonPrompt Parent: " << _nonPromptParent->pdgId() << ' ' 
-	      << _nonPromptParent->status() << std::endl;
+    std::cout << "NonPrompt Parent: " << _nonPromptParent->pdgId() << ' '
+        << _nonPromptParent->status() << std::endl;
   }
   */
 
 }
 
 bool GenParticleParentage::hasAsParent(const reco::GenParticleRef& d,
-				  const reco::GenParticleRef& pc) const {
+          const reco::GenParticleRef& pc) const {
   if( d->numberOfMothers() == 0 ) return false;
   const int nmom = d->numberOfMothers();
   bool result = false;
