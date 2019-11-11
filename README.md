@@ -4,13 +4,14 @@
 
 ##### To work with CMSSW_10_2_10 and head version, you do :
 
-### changes/points to note:
-## (1) No L1 prefiring weights are available for 2018, so still using 2017 weights. SO DO NOT USE THE L1 PREFIRING WEIGHTS FOR 2018 RIGHT NOW 
-## (2) Using JET TOOL BOX for 102X from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetToolbox#How_to_run_the_jetToolbox
-## (3)Added random number for jet smearing - taken originally from ggNtuplizer's 102X branch
-## (4) Included lines:  flags LCG_DICT_HEADER="classes.h " 
-## " flags LCG_DICT_XML="classes_def.xml " to build LCG dictionary (i.e. vector<vector<char> >)  by hand in ggNtuplizer/plugins. Not needed in 94X 
-## corrected era in EgammaPostProcessing tools. 
+#### changes/points to note:
+### (1) No L1 prefiring weights are available for 2018, so still using 2017 weights. SO DO NOT USE THE L1 PREFIRING WEIGHTS FOR 2018 RIGHT NOW 
+### (2) Using JET TOOL BOX for 102X from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetToolbox#How_to_run_the_jetToolbox
+### (3)Added random number for jet smearing - taken originally from ggNtuplizer's 102X branch
+### (4) Included lines:  flags LCG_DICT_HEADER="classes.h " 
+### " flags LCG_DICT_XML="classes_def.xml " to build LCG dictionary (i.e. vector<vector<char> >)  by hand in ggNtuplizer/plugins. Not needed in 94X 
+### corrected era in EgammaPostProcessing tools. 
+### Also for data D, the GT is different wrt A,B,C. So check before submitting. Its in the cfg file  
   
 cmsrel CMSSW_10_2_10 <br>	
 cd CMSSW_10_2_10/src <br>
