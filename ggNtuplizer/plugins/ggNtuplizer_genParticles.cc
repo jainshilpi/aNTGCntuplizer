@@ -316,6 +316,10 @@ else
 
 void ggNtuplizer::fillGenPart(const edm::Event& e) {
 
+
+  //bool debug = true;
+  bool debug = false;
+  
   // Fills tree branches with generated particle info.
 
   // cleanup from previous execution
@@ -349,6 +353,10 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 	mcHasDirectPromptPho_ = 0;
 	nMC_ = 0;
 
+
+	if(debug) 
+	  std::cout<<"inside fillGenPart"<<std::endl;
+	
 	edm::Handle<vector<reco::GenParticle> > genParticlesHandle;
 	e.getByToken(genParticlesCollection_, genParticlesHandle);
 
@@ -364,6 +372,9 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 
 		Int_t status = ip->status();
 
+		if(debug)
+		  std::cout<<"status and pdgID "<<status<<" "<<ip->pdgId()<<std::endl;
+		
 		bool stableFinalStateParticle = (status == 1) && (ip->pt() > 5.0);
 
 		bool quarks = (abs(ip->pdgId())<7);
@@ -421,6 +432,9 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 			if(ip->isPromptDecayed()) setbit(tmpStatusFlag, 7);
 
 
+			if(debug)
+			  std::cout<<"after setting statusFlags"<<std::endl;
+			
       // if genParticle is W or Z, check its decay type
 			if ( ip->pdgId() == 23 || abs(ip->pdgId()) == 24 ) {
 				for (size_t k=0; k < p->numberOfDaughters(); ++k) {
@@ -434,6 +448,9 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 
 			mcStatusFlag.push_back(tmpStatusFlag);
 
+			if(debug)
+			  std::cout<<"pushed statusFlags"<<std::endl;
+
 			Char_t _mcPromptStatysType = getPromptStatus(*ip, genParticlesHandle);
 			mcPromptStatusType_.push_back(_mcPromptStatysType);
 			if((ip->pdgId() == 22) && (_mcPromptStatysType == DIRECTPROMPT)) setbit(mcHasDirectPromptPho_, 0);
@@ -446,7 +463,16 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 			Float_t mcMomEta_   = -999.;
 			Float_t mcMomPhi_   = -999.;
 			UChar_t temp_mcParentage = 0;
+
+			if(debug)
+			  std::cout<<"abt to run on parentage"<<std::endl;
+
 			if (!runOnSherpa_) {
+
+
+			if(debug)
+			  std::cout<<"inside parentage"<<std::endl;
+			
 				Int_t pIndex= std::distance(genParticlesHandle->begin(),ip);
 				if(pIndex >= 0){
 					reco::GenParticleRef partRef = reco::GenParticleRef(genParticlesHandle,pIndex);
@@ -487,6 +513,7 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 
 			mcIndex.push_back(genIndex-1);
 
+			/*
 			if (photonOrLepton) {
 				mcCalIsoDR03.push_back( getGenCalIso(genParticlesHandle, ip, 0.3, false, false) );
 				mcTrkIsoDR03.push_back( getGenTrkIso(genParticlesHandle, ip, 0.3) );
@@ -498,6 +525,10 @@ void ggNtuplizer::fillGenPart(const edm::Event& e) {
 				mcCalIsoDR04.push_back( -999. );
 				mcTrkIsoDR04.push_back( -999. );
 			}
+			*/
+
+			if(debug)
+			  std::cout<<"added nMC"<<std::endl;
 
 			nMC_++;
     } // save info on particles of interest

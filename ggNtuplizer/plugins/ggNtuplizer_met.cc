@@ -107,6 +107,8 @@ void ggNtuplizer::fillMET(const edm::Event& e, const edm::EventSetup& es) {
     if(!_passecalBadCalibFilterUpdate) metFilters_ += std::pow(2, filterNamesToCheck.size());
   }
 
+  if(debug) std::cout<<"getting pfMETHandle"<<std::endl;
+  
   edm::Handle<edm::View<pat::MET> > pfMETHandle;
   e.getByToken(pfMETlabel_, pfMETHandle);
 
@@ -120,7 +122,8 @@ void ggNtuplizer::fillMET(const edm::Event& e, const edm::EventSetup& es) {
     pfMET     = &(pfMETHandle->front());
     pfMET_    = pfMET->et();
     pfMETPhi_ = pfMET->phi();
-
+    
+    /*
     // Type1MET uncertainties =======================================
     pfMET_T1JERUp_ = pfMET->shiftedPt(pat::MET::JetResUp);
     pfMET_T1JERDo_ = pfMET->shiftedPt(pat::MET::JetResDown);
@@ -143,14 +146,17 @@ void ggNtuplizer::fillMET(const edm::Event& e, const edm::EventSetup& es) {
     pfMETPhi_T1JESDo_ = pfMET->shiftedPhi(pat::MET::JetEnDown);
     pfMETPhi_T1UESUp_ = pfMET->shiftedPhi(pat::MET::UnclusteredEnUp);
     pfMETPhi_T1UESDo_ = pfMET->shiftedPhi(pat::MET::UnclusteredEnDown);
+    */
 
     // pfMET_caloMetSig_ = pfMET->caloMetSignificance();
     pfMET_metSig_ = pfMET->metSignificance();
     pfMET_EtSig_ = pfMET->mEtSig();
 
-    if (!e.isRealData()) {
+    /*
+    if (!e.isRealData() && doGenParticles_) {
       genMET_    = pfMET->genMET()->et();
       genMETPhi_ = pfMET->genMET()->phi();
     }
+    */
   }
 }
