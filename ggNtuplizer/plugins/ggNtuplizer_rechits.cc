@@ -3,6 +3,9 @@
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/ESDetId.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
+#include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
+#include "Geometry/CSCGeometry/interface/CSCGeometry.h"
+#include "Geometry/Records/interface/MuonGeometryRecord.h"
 
 #include "limits"
 
@@ -125,6 +128,17 @@ vector<Float_t> cscSegEta_;
 vector<Float_t> cscSegPhi_;
 vector<int> cscSegDim_;
 vector<int> cscSegnRH_;
+
+vector<Float_t> cscSegGlobX_;
+vector<Float_t> cscSegGlobY_;
+vector<Float_t> cscSegGlobZ_;
+vector<Float_t> cscSegGlobEta_;
+vector<Float_t> cscSegGlobPhi_;
+
+vector<Float_t> cscSegChisq_;
+vector<Float_t> cscSegNhits_;
+vector<Float_t> cscSegNDoF_;
+vector<Float_t> cscSegChisqProb_;
 
 /*
 Float_t ggNtuplizer::ECALrecHitE(const DetId & id, const EcalRecHitCollection *recHits, int di, int dj){
@@ -288,6 +302,16 @@ void ggNtuplizer::branchesRecHit(TTree* tree) {
   tree->Branch("cscSegPhi",         &cscSegPhi_);
 
 
+  tree->Branch("cscSegGlobX",         &cscSegGlobX_);
+  tree->Branch("cscSegGlobY",         &cscSegGlobY_);
+  tree->Branch("cscSegGlobZ",         &cscSegGlobZ_);
+  tree->Branch("cscSegGlobEta",         &cscSegGlobEta_);
+  tree->Branch("cscSegGlobPhi",         &cscSegGlobPhi_);
+
+  tree->Branch("cscSegChisq",         &cscSegChisq_);
+  tree->Branch("cscSegNhits",         &cscSegNhits_);
+  tree->Branch("cscSegNDoF",         &cscSegNDoF_);
+  tree->Branch("cscSegChisqProb",         &cscSegChisqProb_);
 
 };
 
@@ -534,6 +558,18 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
   cscSegnRH_.clear();
   cscSegEta_.clear();
   cscSegPhi_.clear();
+
+
+  cscSegGlobX_.clear();
+  cscSegGlobY_.clear();
+  cscSegGlobZ_.clear();
+  cscSegGlobEta_.clear();
+  cscSegGlobPhi_.clear();
+
+  cscSegChisq_.clear();
+  cscSegNhits_.clear();
+  cscSegNDoF_.clear();
+  cscSegChisqProb_.clear();
 
   if(debugRH){
 
@@ -857,6 +893,11 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
 
 
   ///////////////////////////////////MUON rechits
+  ///code from here local-->global is taken: https://cmssdt.cern.ch/lxr/source/RecoLocalMuon/CSCValidation/src/CSCValidation.cc
+  
+  // Get the CSC Geometry :
+  edm::ESHandle<CSCGeometry> cscGeom;
+  es.get<MuonGeometryRecord>().get(cscGeom);
 
   edm::Handle<CSCSegmentCollection> allCSCSegments;
   e.getByToken(cscSegmentsCollection_, allCSCSegments);
@@ -873,6 +914,7 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
 	int cscStation = CSCId.station();
 	int cscRing = CSCId.ring();
 
+
 	LocalPoint segmentPosition= segment->localPosition();
 	LocalVector segmentDirection=segment->localDirection();
 	float dz=segmentDirection.z();
@@ -888,6 +930,29 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
 	int segDim = segment->dimension();
 	int segnRH = segment->nRecHits();
 
+	//
+	float chisq = segment->chi2();
+	int nhits = segment->nRecHits();
+	int nDOF = 2 * nhits - 4;
+	double chisqProb = ChiSquaredProbability((double)chisq, nDOF);
+	
+	// global transformation
+	float globX = 0.;
+	float globY = 0.;
+	float globZ = 0.;
+	float globTheta = 0.;
+	float globPhi = 0.;
+	const CSCChamber* cscchamber = cscGeom->chamber(CSCId);
+	if (cscchamber) {
+	  GlobalPoint globalPosition = cscchamber->toGlobal(segmentPosition);
+	  globX = globalPosition.x();
+	  globY = globalPosition.y();
+	  globZ = globalPosition.z();
+	  GlobalVector globalDirection = cscchamber->toGlobal(segmentDirection);
+	  globTheta = globalDirection.theta();
+	  globPhi = globalDirection.phi();
+	}
+
 	cscSegEE_.push_back(cscEndCap);
 	cscSegStation_.push_back(cscStation);
 	cscSegRing_.push_back(cscRing);
@@ -902,6 +967,19 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
 	cscSegEta_.push_back(eta);
 	cscSegPhi_.push_back(phi);
 
+	cscSegGlobX_.push_back(globX);
+	cscSegGlobY_.push_back(globY);
+	cscSegGlobZ_.push_back(globZ);
+	cscSegGlobEta_.push_back(globTheta);
+	cscSegGlobPhi_.push_back(globPhi);
+	
+	cscSegChisq_.push_back(chisq);
+	cscSegNhits_.push_back(nhits);
+	cscSegNDoF_.push_back(nDOF);
+	cscSegChisqProb_.push_back(chisqProb);
+
+	//cout<<"eta is "<<eta<<endl;
+	
 	nCSCSeg_++;
       }//for (segment = allCSCSegments->begin();segment!=allCSCSegments->end(); ++segment)
       

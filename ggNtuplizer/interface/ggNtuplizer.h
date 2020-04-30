@@ -43,6 +43,12 @@
 #include "DataFormats/CSCRecHit/interface/CSCSegmentCollection.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
+#include "HLTrigger/HLTcore/interface/TriggerExpressionData.h"
+#include "HLTrigger/HLTcore/interface/TriggerExpressionEvaluator.h"
+#include "HLTrigger/HLTcore/interface/TriggerExpressionParser.h"
+
+
+
 #include "iterator"
 
 using namespace std;
@@ -198,6 +204,11 @@ private:
   edm::EDGetTokenT<reco::JetTagCollection>          boostedDoubleSVLabel_;
   edm::EDGetTokenT<pat::PackedCandidateCollection>  pckPFCandidateCollection_;
   edm::EDGetTokenT<Bool_t>                          ecalBadCalibFilterUpdateToken_;
+  edm::EDGetTokenT<Bool_t>                          passedVertexFilterToken_;
+  edm::EDGetTokenT<Bool_t>                          passedEcalDeadCellToken_;
+  edm::EDGetTokenT<Bool_t>                          passedGlobalHaloToken_;
+  edm::EDGetTokenT<Bool_t>                          passedeeBadScFilterToken_;
+  edm::EDGetTokenT<Bool_t>                          passedHBHENoiseFilterToken_;
 
   edm::EDGetTokenT<HBHERecHitCollection>          hbheRecHitCollection_;
   edm::EDGetTokenT<HORecHitCollection>            hoRecHitCollection_;
@@ -228,6 +239,17 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > phoPhotonIsolationToken_; 
   edm::EDGetTokenT<edm::ValueMap<float> > phoWorstChargedIsolationToken_; 
 
+
+  ///OOT photons
+  edm::EDGetTokenT<edm::ValueMap<bool> >  ootPhoLooseIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  ootPhoMediumIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >  ootPhoTightIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > ootPhoMVAValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > ootPhoChargedIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > ootPhoNeutralHadronIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > ootPhoPhotonIsolationToken_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > ootPhoWorstChargedIsolationToken_; 
+
   // elecontr ID decisions objects
   edm::EDGetTokenT<edm::ValueMap<bool> >  eleVetoIdMapToken_;
   edm::EDGetTokenT<edm::ValueMap<bool> >  eleLooseIdMapToken_;
@@ -239,6 +261,7 @@ private:
   edm::ESHandle<CaloGeometry>          pG_;
   
   edm::EDGetTokenT<reco::BeamSpot> offlinebeamSpot_;
+
 
   double sigma1Pix;
   double sigma1Tib;
@@ -274,7 +297,11 @@ private:
   TH1F    *hSumGenWeight_;
 
   HLTPrescaleProvider hltPrescaleProvider_;
-
+  triggerExpression::Data m_triggerCache;
+  std::unique_ptr<triggerExpression::Evaluator> m_triggerSelector;
+  std::unique_ptr<triggerExpression::Evaluator> m_triggerSelectorPB;
+  std::unique_ptr<triggerExpression::Evaluator> m_triggerSelectorMB;
+  std::unique_ptr<triggerExpression::Evaluator> m_triggerSelectorZB;
   bool debug;
   
 };

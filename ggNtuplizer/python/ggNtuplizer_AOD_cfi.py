@@ -127,7 +127,9 @@ ggNtuplizer = cms.EDAnalyzer("ggNtuplizer",
                              eleTightIdMap   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"),
                              eleHEEPIdMap    = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV70"),
                              #eleMVAValuesMap = cms.InputTag("electronMVAValueMapProducer:mvaEleID-Fall17-noIso-V2-wp90")
-                             eleMVAValuesMap = cms.InputTag("egmGsfElectronIDs:mvaEleID-Fall17-noIso-V2-wp90")
+                             eleMVAValuesMap = cms.InputTag("egmGsfElectronIDs:mvaEleID-Fall17-noIso-V2-wp90"),
+
+                             #triggerSelection = cms.string("L1_BptxXOR")
 
 )
 

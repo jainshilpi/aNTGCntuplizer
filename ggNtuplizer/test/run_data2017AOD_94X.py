@@ -15,13 +15,17 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '94X_dataRun2_v11', '')
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.source = cms.Source("PoolSource",
                             #fileNames = cms.untracked.vstring('file:F8DDFDC7-8AD6-E711-BCA2-4C79BA1811CB.root')
                             #fileNames = cms.untracked.vstring('root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/17Nov2017-v1/60000/3011B1EA-0BE7-E711-8D8B-3417EBE61338.root')
                             
                             #fileNames = cms.untracked.vstring('root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/AOD/17Nov2017-v1/60000/CCC5B4B1-DBE7-E711-9EFD-7845C4FC3602.root')
-                            fileNames = cms.untracked.vstring('root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/AOD/17Nov2017-v1/60000/CCC5B4B1-DBE7-E711-9EFD-7845C4FC3602.root')
-                            )
+                            #fileNames = cms.untracked.vstring('root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/AOD/17Nov2017-v1/60000/CCC5B4B1-DBE7-E711-9EFD-7845C4FC3602.root')
+                            fileNames = cms.untracked.vstring('file:CCC5B4B1-DBE7-E711-9EFD-7845C4FC3602.root')
+
+                            #fileNames = cms.untracked.vstring('root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/AOD/23Jun2017-v1/10000/3AB2A9ED-5259-E711-9E5D-FA163E65C977.root')
+)
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
 process.load( "PhysicsTools.PatAlgos.producersLayer1.patCandidates_cff" )
 process.load( "PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cff" )
@@ -29,7 +33,7 @@ process.load( "PhysicsTools.PatAlgos.selectionLayer1.selectedPatCandidates_cff" 
 process.TFileService = cms.Service("TFileService", fileName = cms.string('anTGCtree_data.root'))
 ##########################################################################################################################
 
-
+#process.Tracer = cms.Service("Tracer")
 
 ##########################################################################################################################
 ### fix a bug in the ECAL-Tracker momentum combination when applying the scale and smearing
@@ -61,6 +65,7 @@ setupEgammaPostRecoSeq(process,
 from PhysicsTools.PatAlgos.tools.coreTools import *
 runOnData( process,  names=['Photons', 'Electrons','Muons','Taus','Jets'], outputModules = [] )
 removeMCMatching(process, names=['All'], outputModules=[])
+
 ##########################################################################################################################
 
 
@@ -115,8 +120,27 @@ process.ggNtuplizer.dumpTaus=cms.bool(False)
 #process.ggNtuplizer.triggerEvent=cms.InputTag("slimmedPatTrigger")
 ##########################################################################################################################
 
+####L1 bits
+process.ggNtuplizer.triggerSelection = cms.string("L1_BptxXOR")
+process.ggNtuplizer.triggerSelectionPB = cms.string("L1_BptxPlus")
+process.ggNtuplizer.triggerSelectionMB = cms.string("L1_BptxMinus")
+process.ggNtuplizer.triggerSelectionZB = cms.string("L1_ZeroBias")
+
+process.ggNtuplizer.triggerConfiguration =  cms.PSet(
+    hltResults = cms.InputTag('TriggerResults','','HLT'),
+    l1tResults = cms.InputTag('gtStage2Digis'),
+    daqPartitions = cms.uint32(1),
+    #l1tIgnoreMask = cms.bool( False ),
+    #l1techIgnorePrescales = cms.bool( True ),
+    l1tIgnoreMaskAndPrescale = cms.bool( True ),
+    throw  = cms.bool( True )
+)
+
+
+
 
 ##########################################################################################################################
+
 process.load('RecoMET.METFilters.ecalBadCalibFilter_cfi')
 
 baddetEcallist = cms.vuint32(
@@ -132,40 +156,92 @@ baddetEcallist = cms.vuint32(
 
 process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
     "EcalBadCalibFilter",
-    EcalRecHitSource = cms.InputTag("reducedEgamma:reducedEERecHits"),
+    #EcalRecHitSource = cms.InputTag("reducedEgamma:reducedEERecHits"),
+    EcalRecHitSource = cms.InputTag("reducedEcalRecHitsEE"),
     ecalMinEt        = cms.double(50.),
     baddetEcal    = baddetEcallist,
     taggingMode = cms.bool(True),
     debug = cms.bool(False)
     )
 
+
+
+
+
+#process.load('PhysicsTools.PatAlgos.slimming.metFilterPaths_cff')
+process.load('RecoMET.METFilters.EcalDeadCellTriggerPrimitiveFilter_cfi')
+process.load('RecoMET.METFilters.globalSuperTightHalo2016Filter_cfi')
+process.load('RecoMET.METFilters.eeBadScFilter_cfi')
+process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
+process.load('CommonTools.RecoAlgos.HBHENoiseFilter_cfi')
+
+process.load('RecoMET.METFilters.primaryVertexFilter_cfi')
+##change the name from primaryVertexFilter  ---> some kind of clash happens
+process.goodVertexFilter = cms.EDFilter(
+    "GoodVertexFilter",
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+    minimumNDOF = cms.uint32(4) ,
+    maxAbsZ = cms.double(24),
+    maxd0 = cms.double(2)
+)
+
+
+
+process.HBHENoiseFilter = cms.EDFilter(
+    'BooleanFlagFilter',
+    #inputLabel = cms.InputTag('HBHENoiseFilterResultProducer','HBHENoiseFilterResult'),
+    inputLabel = cms.InputTag('HBHENoiseFilterResultProducer'),
+    reverseDecision = cms.bool(False)
+)
+
+###https://cmssdt.cern.ch/lxr/source/RecoMET/METFilters/test/filters_cfg.py?v=CMSSW_11_1_X_2020-03-03-2300
+##https://hypernews.cern.ch/HyperNews/CMS/get/met/582.html
+
+#process.HBHENoiseFilter.taggingMode = cms.bool(False)
 process.ggNtuplizer.ecalBadCalibFilter = cms.InputTag("ecalBadCalibReducedMINIAODFilter")
+process.ggNtuplizer.passedVertexFilter = cms.InputTag("goodVertexFilter")
+process.ggNtuplizer.passedEcalDeadCell = cms.InputTag("EcalDeadCellTriggerPrimitiveFilter")
+process.ggNtuplizer.passedGlobalHalo = cms.InputTag("globalSuperTightHalo2016Filter")
+process.ggNtuplizer.passedeeBadScFilter = cms.InputTag("eeBadScFilter")
+#process.ggNtuplizer.passedHBHENoiseIsoFilter = cms.InputTag("HBHENoiseFilter")
+process.ggNtuplizer.passedHBHENoiseFilter = cms.InputTag('HBHENoiseFilterResultProducer','HBHENoiseFilterResult')
+
 ##########################################################################################################################
 
 process.load("PhysicsTools.PatAlgos.producersLayer1.ootPhotonProducer_cff")
 process.patOOTPhotons.ecalPFClusterIsoMap = cms.InputTag("ootPhotonEcalPFClusterIsolationProducer")
 process.patOOTPhotons.hcalPFClusterIsoMap = cms.InputTag("ootPhotonHcalPFClusterIsolationProducer")
 
+
+
 ##########################################################################################################################
 process.p = cms.Path(
-    #process.ecalBadCalibReducedMINIAODFilter *
+    #process.goodVertexFilter * 
+    process.EcalDeadCellTriggerPrimitiveFilter * 
+    process.globalSuperTightHalo2016Filter * 
+    process.eeBadScFilter *
+    process.HBHENoiseFilterResultProducer *
+    #process.HBHENoiseFilter *
+    process.ecalBadCalibReducedMINIAODFilter *
+
     process.patDefaultSequence *
     #process.fullPatMetSequenceModifiedMET *
-    process.egammaPostRecoSeq *
-    process.ggNtuplizer
+    process.egammaPostRecoSeq 
+    * process.ggNtuplizer
     )
 
+#process.endjob_step = cms.EndPath(process.endOfProcess)
+'''
+process.out = cms.OutputModule("PoolOutputModule",
+                               fileName = cms.untracked.string('myOutputFile.root'),
+                               SelectEvents = cms.untracked.PSet( 
+                                   SelectEvents = cms.vstring("p")
+                            )
+                           )
 
-#process.out = cms.OutputModule("PoolOutputModule",
-#                               fileName = cms.untracked.string('myOutputFile.root'),
-#                               SelectEvents = cms.untracked.PSet( 
-#                                   SelectEvents = cms.vstring("p")
-#                            )
-#                           )
 
 
-
-#process.e = cms.EndPath(process.out)
-
+process.e = cms.EndPath(process.out)
+'''
 #print process.dumpPython()
 ##########################################################################################################################

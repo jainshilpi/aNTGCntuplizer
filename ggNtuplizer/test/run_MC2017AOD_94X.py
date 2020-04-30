@@ -16,7 +16,7 @@ from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '94X_mc2017_realistic_v11', '')
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.source = cms.Source("PoolSource",
@@ -32,7 +32,9 @@ process.source = cms.Source("PoolSource",
                                 #'file:/hdfs/store/user/shilpi/BeamHalo_2017/AODSIM/beamHaloAODSIM_7_5_1_20_16.root',
                                 #'file:/hdfs/store/user/shilpi/BeamHalo_2017/AODSIM/beamHaloAODSIM_6_14_4_19_10_3_18.root'
                                 #'/store/mc/RunIIFall17DRPremix/ZNuNuGJets_MonoPhoton_PtG-130_TuneCP5_13TeV-madgraph/AODSIM/PU2017_94X_mc2017_realistic_v11-v1/60000/E65EA552-F88E-E911-810C-B499BAAC0676.root'
-                                'file:E65EA552-F88E-E911-810C-B499BAAC0676.root'
+                                'file:mc_E65EA552-F88E-E911-810C-B499BAAC0676.root'
+                                #'file:/hdfs/store/user/shilpi/V21_AODSIM_BEAM1ON_PU/BeamHalo_2017_Beam1ON/BeamHalo_AODSIM_V21_AODSIM_BEAM1ON_PU/200215_230732/0000/BH_3_668.root'
+                                
                             )
 )
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
@@ -128,6 +130,21 @@ process.ggNtuplizer.dumpTaus=cms.bool(False)
 #process.ggNtuplizer.triggerEvent=cms.InputTag("slimmedPatTrigger")
 ##########################################################################################################################
 
+####L1 bits
+process.ggNtuplizer.triggerSelection = cms.string("L1_BptxXOR")
+process.ggNtuplizer.triggerSelectionPB = cms.string("L1_BptxPlus")
+process.ggNtuplizer.triggerSelectionMB = cms.string("L1_BptxMinus")
+process.ggNtuplizer.triggerSelectionZB = cms.string("L1_ZeroBias")
+
+process.ggNtuplizer.triggerConfiguration =  cms.PSet(
+    hltResults = cms.InputTag('TriggerResults','','HLT'),
+    l1tResults = cms.InputTag('gtStage2Digis'),
+    daqPartitions = cms.uint32(1),
+    #l1tIgnoreMask = cms.bool( False ),
+    #l1techIgnorePrescales = cms.bool( True ),
+    l1tIgnoreMaskAndPrescale = cms.bool( True ),
+    throw  = cms.bool( True )
+)
 
 ##########################################################################################################################
 process.load('RecoMET.METFilters.ecalBadCalibFilter_cfi')
@@ -145,14 +162,54 @@ baddetEcallist = cms.vuint32(
 
 process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
     "EcalBadCalibFilter",
-    EcalRecHitSource = cms.InputTag("reducedEgamma:reducedEERecHits"),
+    #EcalRecHitSource = cms.InputTag("reducedEgamma:reducedEERecHits"),
+    EcalRecHitSource = cms.InputTag("reducedEcalRecHitsEE"),
     ecalMinEt        = cms.double(50.),
     baddetEcal    = baddetEcallist,
     taggingMode = cms.bool(True),
     debug = cms.bool(False)
     )
 
+#process.load('PhysicsTools.PatAlgos.slimming.metFilterPaths_cff')
+process.load('RecoMET.METFilters.EcalDeadCellTriggerPrimitiveFilter_cfi')
+process.load('RecoMET.METFilters.globalSuperTightHalo2016Filter_cfi')
+process.load('RecoMET.METFilters.eeBadScFilter_cfi')
+process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
+process.load('CommonTools.RecoAlgos.HBHENoiseFilter_cfi')
+
+process.load('RecoMET.METFilters.primaryVertexFilter_cfi')
+##change the name from primaryVertexFilter  ---> some kind of clash happens
+process.goodVertexFilter = cms.EDFilter(
+    "GoodVertexFilter",
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+    minimumNDOF = cms.uint32(4) ,
+    maxAbsZ = cms.double(24),
+    maxd0 = cms.double(2)
+)
+
+
+
+process.HBHENoiseFilter = cms.EDFilter(
+    'BooleanFlagFilter',
+    inputLabel = cms.InputTag('HBHENoiseFilterResultProducer','HBHENoiseFilterResult'),
+    #inputLabel = cms.InputTag('HBHENoiseFilterResultProducer'),
+    reverseDecision = cms.bool(False),
+    taggingMode = cms.bool(False)
+)
+
+
+#process.HBHENoiseFilter.taggingMode = cms.bool(False)
 process.ggNtuplizer.ecalBadCalibFilter = cms.InputTag("ecalBadCalibReducedMINIAODFilter")
+process.ggNtuplizer.passedVertexFilter = cms.InputTag("goodVertexFilter")
+process.ggNtuplizer.passedEcalDeadCell = cms.InputTag("EcalDeadCellTriggerPrimitiveFilter")
+process.ggNtuplizer.passedGlobalHalo = cms.InputTag("globalSuperTightHalo2016Filter")
+process.ggNtuplizer.passedeeBadScFilter = cms.InputTag("eeBadScFilter")
+#process.ggNtuplizer.passedHBHENoiseFilter = cms.InputTag("HBHENoiseFilter")
+process.ggNtuplizer.passedHBHENoiseFilter = cms.InputTag('HBHENoiseFilterResultProducer','HBHENoiseFilterResult')
+
+#process.ggNtuplizer.patTriggerResults = cms.InputTag("TriggerResults", "", "ggKit")
+#process.ggNtuplizer.patTriggerResults = cms.InputTag("TriggerResults", "", "@skipCurrentProcess")
+
 ##########################################################################################################################
 
 process.load("PhysicsTools.PatAlgos.producersLayer1.ootPhotonProducer_cff")
@@ -161,24 +218,33 @@ process.patOOTPhotons.hcalPFClusterIsoMap = cms.InputTag("ootPhotonHcalPFCluster
 
 ##########################################################################################################################
 process.p = cms.Path(
-    #process.ecalBadCalibReducedMINIAODFilter *
+
+    #process.goodVertexFilter * 
+    process.EcalDeadCellTriggerPrimitiveFilter * 
+    process.globalSuperTightHalo2016Filter * 
+    process.eeBadScFilter *
+    process.HBHENoiseFilterResultProducer *
+    #process.HBHENoiseFilter *
+    process.ecalBadCalibReducedMINIAODFilter *
+
     process.patDefaultSequence *
     #process.fullPatMetSequenceModifiedMET *
-    process.egammaPostRecoSeq *
-    process.ggNtuplizer
+    process.egammaPostRecoSeq 
+    * process.ggNtuplizer
     )
 
+'''
+process.out = cms.OutputModule("PoolOutputModule",
+                               fileName = cms.untracked.string('myOutputFile.root'),
+                               SelectEvents = cms.untracked.PSet( 
+                                   SelectEvents = cms.vstring("p")
+                               ),
+                               outputCommands = cms.untracked.vstring('keep *')
+                           )
 
-#process.out = cms.OutputModule("PoolOutputModule",
-#                               fileName = cms.untracked.string('myOutputFile.root'),
-#                               SelectEvents = cms.untracked.PSet( 
-#                                   SelectEvents = cms.vstring("p")
-#                            )
-#                           )
 
 
-
-#process.e = cms.EndPath(process.out)
-
+process.e = cms.EndPath(process.out)
+'''
 #print process.dumpPython()
 ##########################################################################################################################

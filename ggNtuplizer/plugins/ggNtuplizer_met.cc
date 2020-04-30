@@ -32,7 +32,8 @@ Float_t pfMETPhi_T1UESDo_;
 // Float_t pfMET_caloMetSig_;
 Float_t pfMET_metSig_;
 Float_t pfMET_EtSig_;
-
+///miniAOD
+/*
 const std::vector<std::string> filterNamesToCheck = {
   "Flag_goodVertices",
   "Flag_globalSuperTightHalo2016Filter",
@@ -43,6 +44,17 @@ const std::vector<std::string> filterNamesToCheck = {
   "Flag_BadChargedCandidateFilter"
   "Flag_eeBadScFilter",
   "Flag_ecalBadCalibFilter",
+};
+*/
+
+///AOD
+const std::vector<std::string> filterNamesToCheck = {
+  "goodVertexFilter",
+  "EcalDeadCellTriggerPrimitiveFilter",
+  "globalSuperTightHalo2016Filter",
+  "eeBadScFilter",
+  "HBHENoiseFilter",
+  "ecalBadCalibReducedMINIAODFilter",
 };
 
 void ggNtuplizer::branchesMET(TTree* tree) {
@@ -78,33 +90,86 @@ void ggNtuplizer::branchesMET(TTree* tree) {
 
 void ggNtuplizer::fillMET(const edm::Event& e, const edm::EventSetup& es) {
   metFilters_ = 0;
-  if (addFilterInfoMINIAOD_) {
-    edm::Handle<edm::TriggerResults> patFilterResultsHandle;
-    e.getByToken(patTrgResultsLabel_, patFilterResultsHandle);
-    edm::TriggerResults const& patFilterResults = *patFilterResultsHandle;
+  if (addFilterInfoMINIAOD_ || addFilterInfoAOD_) {
 
-    auto&& filterNames = e.triggerNames(patFilterResults);
 
-    ////=== the following lines allow us to find the filters stored in the event ! ===
-    // edm::TriggerNames const& triggerNames = e.triggerNames(patFilterResults);
-    // for ( edm::TriggerNames::Strings::const_iterator triggerName = triggerNames.triggerNames().begin(); triggerName != triggerNames.triggerNames().end(); ++triggerName){
-    //   int triggerId = triggerNames.triggerIndex(*triggerName);
-    //   if ( triggerId >= 0 && triggerId < (int)triggerNames.size() ){
-    //     std::string triggerDecision = ( patFilterResultsHandle->accept(triggerId) ) ? "passed" : "failed";
-    //     std::cout << " triggerName = " << (*triggerName) << " " << triggerDecision << std::endl;
-    //   }
-    // }
-    for (unsigned iF = 0; iF < filterNamesToCheck.size(); iF++){
-      unsigned index = filterNames.triggerIndex(filterNamesToCheck[iF]);
-      if( index == filterNames.size() ) LogDebug("METFilters") << filterNamesToCheck[iF] << " is missing, exiting";
-      else if (!patFilterResults.accept(index)) metFilters_ += std::pow(2, iF);
-    }
-
+    if(addFilterInfoMINIAOD_){
+      edm::Handle<edm::TriggerResults> patFilterResultsHandle;
+      e.getByToken(patTrgResultsLabel_, patFilterResultsHandle);
+      edm::TriggerResults const& patFilterResults = *patFilterResultsHandle;
+      
+      auto&& filterNames = e.triggerNames(patFilterResults);
+      
+      ////=== the following lines allow us to find the filters stored in the event ! ===
+      // edm::TriggerNames const& triggerNames = e.triggerNames(patFilterResults);
+      // for ( edm::TriggerNames::Strings::const_iterator triggerName = triggerNames.triggerNames().begin(); triggerName != triggerNames.triggerNames().end(); ++triggerName){
+      //   int triggerId = triggerNames.triggerIndex(*triggerName);
+      //   if ( triggerId >= 0 && triggerId < (int)triggerNames.size() ){
+      //     std::string triggerDecision = ( patFilterResultsHandle->accept(triggerId) ) ? "passed" : "failed";
+      //     std::cout << " triggerName = " << (*triggerName) << " " << triggerDecision << std::endl;
+      //   }
+      // }
+      for (unsigned iF = 0; iF < filterNamesToCheck.size(); iF++){
+	unsigned index = filterNames.triggerIndex(filterNamesToCheck[iF]);
+	if( index == filterNames.size() ) LogDebug("METFilters") << filterNamesToCheck[iF] << " is missing, exiting";
+	///SJ
+	else if (!patFilterResults.accept(index)){
+	  std::cout<<"Find filter named "<<filterNamesToCheck[iF]<<std::endl;
+	  metFilters_ += std::pow(2, iF);
+	}
+	//if(index < filterNames.size()) std::cout<<"Name of hte current filter is found "<<filterNamesToCheck[iF]<<std::endl;	
+	//if(index == filterNames.size()) std::cout<<"Name of hte current filter is NOT found "<<filterNamesToCheck[iF]<<std::endl;	
+      }
+    }//if(addFilterInfoMINIAOD_)
+    
+    /*
     //////https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#Accessing_the_filter_decision_in
+    ////Primary vertex filter
+    edm::Handle<bool> passedVertexFilter;
+    e.getByToken(passedVertexFilterToken_, passedVertexFilter);
+    Bool_t _passedVertexFilter =  (*passedVertexFilter );
+    std::cout<<"_passedVertexFilter "<<_passedVertexFilter<<std::endl;
+    if(!_passedVertexFilter) metFilters_ += std::pow(2, 0);
+    */
+
+    ////ECALDeadCell
+    edm::Handle<bool> passedEcalDeadCell;
+    e.getByToken(passedEcalDeadCellToken_, passedEcalDeadCell);
+    Bool_t _passedEcalDeadCell =  (*passedEcalDeadCell );
+    //std::cout<<"_passedEcalDeadCell "<<_passedEcalDeadCell<<std::endl;
+    if(!_passedEcalDeadCell) metFilters_ += std::pow(2, 1);
+
+
+    ////Global Halo tight 2016
+    edm::Handle<bool> passedGlobalHalo;
+    e.getByToken(passedGlobalHaloToken_, passedGlobalHalo);
+    Bool_t _passedGlobalHalo =  (*passedGlobalHalo );
+    //std::cout<<"_passedGlobalHalo "<<_passedGlobalHalo<<std::endl;
+    if(!_passedGlobalHalo) metFilters_ += std::pow(2, 2);
+
+
+    ////Bad EESC Filter
+    edm::Handle<bool> passedeeBadScFilter;
+    e.getByToken(passedeeBadScFilterToken_, passedeeBadScFilter);
+    Bool_t _passedeeBadScFilter =  (*passedeeBadScFilter );
+    //std::cout<<"_passedeeBadScFilter "<<_passedeeBadScFilter<<std::endl;
+    if(!_passedeeBadScFilter) metFilters_ += std::pow(2, 3);
+
+
+    ////HBHE noise filter
+    edm::Handle<bool> passedHBHENoiseFilter;
+    e.getByToken(passedHBHENoiseFilterToken_, passedHBHENoiseFilter);
+    Bool_t _passedHBHENoiseFilter =  (*passedHBHENoiseFilter );
+    //std::cout<<"_passedHBHENoiseFilter "<<_passedHBHENoiseFilter<<std::endl;
+    if(!_passedHBHENoiseFilter) metFilters_ += std::pow(2, 4);
+
+    ////ECAL filter
     edm::Handle<bool> passecalBadCalibFilterUpdate ;
     e.getByToken(ecalBadCalibFilterUpdateToken_, passecalBadCalibFilterUpdate);
     Bool_t _passecalBadCalibFilterUpdate =  (*passecalBadCalibFilterUpdate );
-    if(!_passecalBadCalibFilterUpdate) metFilters_ += std::pow(2, filterNamesToCheck.size());
+    //std::cout<<"_passecalBadCalibFilterUpdate "<<_passecalBadCalibFilterUpdate<<std::endl;
+    //if(!_passecalBadCalibFilterUpdate) metFilters_ += std::pow(2, filterNamesToCheck.size());
+    if(!_passecalBadCalibFilterUpdate) metFilters_ += std::pow(2, 5);
   }
 
   if(debug) std::cout<<"getting pfMETHandle"<<std::endl;

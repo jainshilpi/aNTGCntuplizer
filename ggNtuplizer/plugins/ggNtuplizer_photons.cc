@@ -506,6 +506,24 @@ vector<Float_t>  ootPho_SigmaIEtaIEtaFull5x5_;
 vector<Float_t>  ootPho_SigmaIEtaIPhiFull5x5_;
 vector<Float_t>  ootPho_SigmaIPhiIPhiFull5x5_;
 vector<Float_t>  ootPho_R9Full5x5_;
+vector<Float_t>  ootPho_E2x2Full5x5_;
+vector<Float_t>  ootPho_E5x5Full5x5_;
+vector<Float_t>  ootPho_ESEnP1_;
+vector<Float_t>  ootPho_ESEnP2_;
+vector<Float_t>  ootPho_SCE_;
+vector<Float_t>  ootPho_SCRawE_;
+vector<Float_t>  ootPho_SCEta_;
+vector<Float_t>  ootPho_SCPhi_;
+vector<Float_t>  ootPho_SCEtaWidth_;
+vector<Float_t>  ootPho_SCPhiWidth_;
+vector<Float_t>  ootPho_SCBrem_;
+vector<Float_t>  ootPho_PFChIso_;
+vector<Float_t>  ootPho_PFPhoIso_;
+vector<Float_t>  ootPho_PFNeuIso_;
+vector<Float_t>  ootPho_PFChWorstIso_;
+vector<Float_t>  ootPho_SeedBCE_;
+vector<Float_t>  ootPho_SeedBCEta_;
+
 // vector<Float_t>  ootPho_R9noZS_;
 // vector<Float_t>  ootPho_sigmaIetaIeta_NoZS_;
 // vector<Float_t>  ootPho_sigmaIetaIphi_NoZS_;
@@ -522,7 +540,7 @@ vector<Float_t>  ootPho_MIPSlope_;
 vector<Float_t>  ootPho_MIPIntercept_;
 vector<Short_t>  ootPho_MIPNhitCone_;
 vector<UChar_t>   ootPho_IDbit_;
-
+vector<Float_t>  ootPho_IDMVA_;
 
 void ggNtuplizer::branchesPhotonsOOT(TTree* tree) {
   tree->Branch("nootPho",                     &nootPho_);
@@ -540,6 +558,27 @@ void ggNtuplizer::branchesPhotonsOOT(TTree* tree) {
   tree->Branch("ootPho_SigmaIEtaIPhiFull5x5", &ootPho_SigmaIEtaIPhiFull5x5_);
   tree->Branch("ootPho_SigmaIPhiIPhiFull5x5", &ootPho_SigmaIPhiIPhiFull5x5_);
   tree->Branch("ootPho_R9Full5x5",            &ootPho_R9Full5x5_);
+  tree->Branch("ootPho_E2x2Full5x5",            &ootPho_E2x2Full5x5_);
+  tree->Branch("ootPho_E5x5Full5x5",            &ootPho_E5x5Full5x5_);
+
+  tree->Branch("ootPho_ESEnP1",            &ootPho_ESEnP1_);
+  tree->Branch("ootPho_ESEnP2",            &ootPho_ESEnP2_);
+  tree->Branch("ootPho_SCE",            &ootPho_SCE_);
+  tree->Branch("ootPho_SCRawE",            &ootPho_SCRawE_);
+  tree->Branch("ootPho_SCEta",            &ootPho_SCEta_);
+  tree->Branch("ootPho_SCPhi",            &ootPho_SCPhi_);
+  tree->Branch("ootPho_SCEtaWidth",            &ootPho_SCEtaWidth_);
+  tree->Branch("ootPho_SCPhiWidth",            &ootPho_SCPhiWidth_);
+  tree->Branch("ootPho_SCBrem",            &ootPho_SCBrem_);
+  tree->Branch("ootPho_PFChIso",            &ootPho_PFChIso_);
+  tree->Branch("ootPho_PFPhoIso",            &ootPho_PFPhoIso_);
+  tree->Branch("ootPho_PFNeuIso",            &ootPho_PFNeuIso_);
+  tree->Branch("ootPho_PFChWorstIso",            &ootPho_PFChWorstIso_);
+  tree->Branch("ootPho_SeedBCE",            &ootPho_SeedBCE_);
+  tree->Branch("ootPho_SeedBCEta",            &ootPho_SeedBCEta_);
+
+  tree->Branch("ootPho_IDMVA",            &ootPho_IDMVA_);
+
   // tree->Branch("ootPho_R9noZS",             &ootPho_R9noZS_);
   // tree->Branch("ootPho_sigmaIetaIeta_NoZS",              &ootPho_sigmaIetaIeta_NoZS_);
   // tree->Branch("ootPho_sigmaIetaIphi_NoZS",             &ootPho_sigmaIetaIphi_NoZS_);
@@ -576,6 +615,25 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
   ootPho_SigmaIEtaIPhiFull5x5_.clear();
   ootPho_SigmaIPhiIPhiFull5x5_.clear();
   ootPho_R9Full5x5_           .clear();
+
+  ootPho_E2x2Full5x5_           .clear();
+  ootPho_E5x5Full5x5_           .clear();
+  ootPho_ESEnP1_                .clear();
+  ootPho_ESEnP2_                .clear();
+  ootPho_SCE_                .clear();
+  ootPho_SCRawE_                .clear();
+  ootPho_SCEta_                .clear();
+  ootPho_SCPhi_                .clear();
+  ootPho_SCEtaWidth_                .clear();
+  ootPho_SCPhiWidth_                .clear();
+  ootPho_SCBrem_                .clear();
+  ootPho_PFChIso_                .clear();
+  ootPho_PFPhoIso_                .clear();
+  ootPho_PFNeuIso_                .clear();
+  ootPho_PFChWorstIso_                .clear();
+  ootPho_SeedBCE_                .clear();
+  ootPho_SeedBCEta_                .clear();
+
   // ootPho_R9noZS_             .clear();
   // ootPho_sigmaIetaIeta_NoZS_            .clear();
   // ootPho_sigmaIetaIphi_NoZS_            .clear();
@@ -592,10 +650,36 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
   ootPho_MIPIntercept_      .clear();
   ootPho_MIPNhitCone_       .clear();
   ootPho_IDbit_        .clear();
+
+  ootPho_IDMVA_        .clear();
+  
   nootPho_ = 0;
 
   edm::Handle<edm::View<pat::Photon> > photonOOT_Handle;
   e.getByToken(photonOOTCollection_, photonOOT_Handle);
+
+  /*
+  ///specific for AOD////
+  edm::Handle<edm::ValueMap<bool> >  loose_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  medium_id_decisions;
+  edm::Handle<edm::ValueMap<bool> >  tight_id_decisions;
+  edm::Handle<edm::ValueMap<float> > mvaValues;
+  edm::Handle<edm::ValueMap<float> > phoChargedIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoNeutralHadronIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoPhotonIsolationMap;
+  edm::Handle<edm::ValueMap<float> > phoWorstChargedIsolationMap;
+
+  e.getByToken(ootPhoLooseIdMapToken_ ,  loose_id_decisions);
+  e.getByToken(ootPhoMediumIdMapToken_,  medium_id_decisions);
+  e.getByToken(ootPhoTightIdMapToken_ ,  tight_id_decisions);
+  e.getByToken(ootPhoMVAValuesMapToken_, mvaValues);
+
+  e.getByToken(ootPhoChargedIsolationToken_,       phoChargedIsolationMap);
+  e.getByToken(ootPhoNeutralHadronIsolationToken_, phoNeutralHadronIsolationMap);
+  e.getByToken(ootPhoPhotonIsolationToken_,        phoPhotonIsolationMap);
+  e.getByToken(ootPhoWorstChargedIsolationToken_,  phoWorstChargedIsolationMap);
+  */
+
 
   if (!photonOOT_Handle.isValid()) {
     edm::LogWarning("ggNtuplizer") << "no OOT pat::Photons in event";
@@ -635,7 +719,29 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
     ootPho_MIPIntercept_   .push_back(iootPho_->mipIntercept());
     ootPho_MIPNhitCone_    .push_back(iootPho_->mipNhitCone());
 
+    ootPho_ESEnP1_        .push_back(iootPho_->superCluster()->preshowerEnergyPlane1());
+    ootPho_ESEnP2_        .push_back(iootPho_->superCluster()->preshowerEnergyPlane2());
 
+    ootPho_SCE_           .push_back(iootPho_->superCluster()->energy());
+    ootPho_SCRawE_        .push_back(iootPho_->superCluster()->rawEnergy());
+    ootPho_SCEta_         .push_back(iootPho_->superCluster()->eta());
+    ootPho_SCPhi_         .push_back(iootPho_->superCluster()->phi());
+    ootPho_SCEtaWidth_    .push_back(iootPho_->superCluster()->etaWidth());
+    ootPho_SCPhiWidth_    .push_back(iootPho_->superCluster()->phiWidth());
+    ootPho_SCBrem_        .push_back(iootPho_->superCluster()->phiWidth()/iootPho_->superCluster()->etaWidth());
+
+    /*
+    const auto ootPho = photonOOT_Handle->ptrAt(nootPho_);
+    ootPho_PFChIso_              .push_back((*phoChargedIsolationMap)[ootPho->originalObjectRef()]);
+    ootPho_PFPhoIso_             .push_back((*phoPhotonIsolationMap)[ootPho->originalObjectRef()]);
+    ootPho_PFNeuIso_             .push_back((*phoNeutralHadronIsolationMap)[ootPho->originalObjectRef()]);
+    ootPho_PFChWorstIso_         .push_back((*phoWorstChargedIsolationMap)[ootPho->originalObjectRef()]);
+    */
+
+    ootPho_SeedBCE_        .push_back(iootPho_->superCluster()->seed()->energy());
+    ootPho_SeedBCEta_      .push_back(iootPho_->superCluster()->seed()->eta());
+
+    /*
     // get ootPho_ton supercluster index (for looking up from the SC branches)
     if(ecalSC_OOT_handle.isValid()){
       const reco::SuperCluster * _tmpootPho_SC = (iootPho_->superCluster().isAvailable()) ? iootPho_->superCluster().get() : nullptr;
@@ -646,6 +752,7 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
       //   std::cout<<_tmpootPho_SC->eta()<<" "<<(ecalSChandle->begin()+tmpootPho_SCindex)->eta()<<" "<<_tmpootPho_SC->phi()<<" "<<(ecalSChandle->begin()+tmpootPho_SCindex)->phi()<<std::endl;
       // }
     }
+    */
 
     UChar_t tmpootPho_FiducialRegion = 0;
     if(iootPho_->isEB()) setbit(tmpootPho_FiducialRegion, 0);
@@ -657,7 +764,7 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
     if(iootPho_->isEERingGap()) setbit(tmpootPho_FiducialRegion, 6);
     ootPho_FiducialRegion_  .push_back(tmpootPho_FiducialRegion);
 
-
+    
     // VID decisions
     UShort_t tmpootPho_IDbit = 0;
     // if(year_ == 2017){
@@ -676,9 +783,51 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
     // if (isPassMVAisov2wp80)  setbit(tmpootPho_IDbit, 5);
     // bool isPassMVAisov2wp90  = iootPho_->photonID("mvaootPho_ID-Fall17-iso-V2-wp90");
     // if (isPassMVAisov2wp90)  setbit(tmpootPho_IDbit, 6);
+
+    /*
+    bool isPassLoose  = (*loose_id_decisions)[ootPho->originalObjectRef()];
+    if(isPassLoose) setbit(tmpootPho_IDbit, 0);
+    //cout<<"isPassLoose "<<isPassLoose<<endl;
+
+    bool isPassMedium = (*medium_id_decisions)[ootPho->originalObjectRef()];
+    if(isPassMedium) setbit(tmpootPho_IDbit, 1);
+    //cout<<"isPassMedium "<<isPassMedium<<endl;
+
+    bool isPassTight  = (*tight_id_decisions)[ootPho->originalObjectRef()];
+    if(isPassTight) setbit(tmpootPho_IDbit, 2);
+    //cout<<"isPassTight "<<isPassTight<<endl;
+
     if (!(iootPho_->mipIsHalo()))  setbit(tmpootPho_IDbit, 7);
 
-    ootPho_IDbit_.push_back(tmpootPho_IDbit);
+    ootPho_IDbit_.push_back(tmpootPho_IDbit);    
+    
+    ootPho_IDMVA_.push_back((*mvaValues)[ootPho->originalObjectRef()]);
+    */
+
+    if (!(iootPho_->mipIsHalo()))  setbit(tmpootPho_IDbit, 7);
+
+
+    // VID decisions
+
+    // if(year_ == 2017){
+    //// https://twiki.cern.ch/twiki/bin/view/CMS/EgammaRunIIRecommendations?rev=9#Fall17v2_AN1
+    // bool isPassLoose  = iootPho_->photonID("cutBasedphotonID-Fall17-94X-V2-loose");
+    // if (isPassLoose)  setbit(tmpootPho_IDbit, 0);
+    // bool isPassMedium = iootPho_->photonID("cutBasedphotonID-Fall17-94X-V2-medium");
+    // if (isPassMedium) setbit(tmpootPho_IDbit, 1);
+    // bool isPassTight  = iootPho_->photonID("cutBasedphotonID-Fall17-94X-V2-tight");
+    // if (isPassTight)  setbit(tmpootPho_IDbit, 2);
+    // bool isPassMVAv2wp80  = iootPho_->photonID("mvaootPho_ID-RunIIFall17-v2-wp80");
+    // if (isPassMVAv2wp80)  setbit(tmpootPho_IDbit, 3);
+    // bool isPassMVAv2wp90  = iootPho_->photonID("mvaootPho_ID-RunIIFall17-v2-wp90");
+    // if (isPassMVAv2wp90)  setbit(tmpootPho_IDbit, 4);
+    // bool isPassMVAisov2wp80  = iootPho_->photonID("mvaootPho_ID-Fall17-iso-V2-wp80");
+    // if (isPassMVAisov2wp80)  setbit(tmpootPho_IDbit, 5);
+    // bool isPassMVAisov2wp90  = iootPho_->photonID("mvaootPho_ID-Fall17-iso-V2-wp90");
+
+
+
+
 
 
     ///////////////////////////////SATURATED/UNSATURATED ///from ggFlash////
@@ -708,6 +857,8 @@ void ggNtuplizer::fillPhotonsOOT(const edm::Event& e, const edm::EventSetup& es)
     ootPho_SigmaIEtaIPhiFull5x5_ .push_back(sep);
     ootPho_SigmaIPhiIPhiFull5x5_ .push_back(spp);
     ootPho_R9Full5x5_            .push_back(iootPho_->full5x5_r9());
+    ootPho_E2x2Full5x5_          .push_back(lazyToolnoZS.e2x2(*(iootPho_->superCluster()->seed())));
+    ootPho_E5x5Full5x5_          .push_back(iootPho_->full5x5_e5x5());
 
     nootPho_++;
   }

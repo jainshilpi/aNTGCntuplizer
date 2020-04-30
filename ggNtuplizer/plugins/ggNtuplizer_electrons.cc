@@ -251,7 +251,7 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
     eleEta_             .push_back(iEle->eta());
     elePhi_             .push_back(iEle->phi());
     eleR9_              .push_back(iEle->r9());
-    // eleSCEn_            .push_back(iEle->superCluster()->energy());
+    eleSCEn_            .push_back(iEle->superCluster()->energy());
     eleEcalEn_          .push_back(iEle->ecalEnergy());
 
     if(ecalSChandle.isValid()){
@@ -264,11 +264,12 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
       // }
     }
 
-    // eleSCEta_           .push_back(iEle->superCluster()->eta());
-    // eleSCPhi_           .push_back(iEle->superCluster()->phi());
-    // eleSCRawEn_         .push_back(iEle->superCluster()->rawEnergy());
-    // eleSCEtaWidth_      .push_back(iEle->superCluster()->etaWidth());
-    // eleSCPhiWidth_      .push_back(iEle->superCluster()->phiWidth());
+     eleSCEta_           .push_back(iEle->superCluster()->eta());
+     eleSCPhi_           .push_back(iEle->superCluster()->phi());
+     eleSCRawEn_         .push_back(iEle->superCluster()->rawEnergy());
+     eleSCEtaWidth_      .push_back(iEle->superCluster()->etaWidth());
+     eleSCPhiWidth_      .push_back(iEle->superCluster()->phiWidth());
+
     eleHoverE_          .push_back(iEle->hcalOverEcal());
 
     eleFiredSingleTrgs_ .push_back(matchSingleElectronTriggerFilters(iEle->pt(), iEle->eta(), iEle->phi()));
@@ -365,7 +366,8 @@ void ggNtuplizer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, 
 
     eleIDMVANonTrg_.push_back((*eleMVAValues)[el->originalObjectRef()]);
 
-
+    eleIDbit_.push_back(tmpeleIDbit);
+    
     elePFClusEcalIso_.push_back(iEle->ecalPFClusterIso());
     elePFClusHcalIso_.push_back(iEle->hcalPFClusterIso());
 

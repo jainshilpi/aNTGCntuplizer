@@ -10,9 +10,16 @@ void ggNtuplizer::endJob() {
 
 
 ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) :
-hltPrescaleProvider_(ps, consumesCollector(), *this)
+  hltPrescaleProvider_(ps, consumesCollector(), *this),
+  m_triggerCache(ps.getParameterSet("triggerConfiguration"), consumesCollector()),
+  m_triggerSelector( triggerExpression::parse( ps.getParameter<std::string>("triggerSelection") ) ),
+  m_triggerSelectorPB( triggerExpression::parse( ps.getParameter<std::string>("triggerSelectionPB") ) ),
+  m_triggerSelectorMB( triggerExpression::parse( ps.getParameter<std::string>("triggerSelectionMB") ) ),
+  m_triggerSelectorZB( triggerExpression::parse( ps.getParameter<std::string>("triggerSelectionZB") ) )
+  
 {
 
+ 
   getECALprefiringWeights_      = ps.getParameter<bool>("getECALprefiringWeights");
   if(getECALprefiringWeights_){
     prefweight_token              = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProb"));
@@ -102,7 +109,14 @@ hltPrescaleProvider_(ps, consumesCollector(), *this)
   ak4PFJetsCHSGenJetLabel_    = consumes<std::vector<reco::GenJet> >    (ps.getParameter<InputTag>("ak4PFJetsCHSGenJetLabel"));
   ak8GenJetLabel_             = consumes<std::vector<reco::GenJet> >    (ps.getParameter<InputTag>("ak8GenJetLabel"));
   newparticles_               =                                          ps.getParameter< vector<int > >("newParticles");
-  //ecalBadCalibFilterUpdateToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("ecalBadCalibFilter"));
+  ecalBadCalibFilterUpdateToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("ecalBadCalibFilter"));
+
+
+  passedVertexFilterToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("passedVertexFilter"));
+  passedEcalDeadCellToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("passedEcalDeadCell"));
+  passedGlobalHaloToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("passedGlobalHalo"));
+  passedeeBadScFilterToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("passedeeBadScFilter"));
+  passedHBHENoiseFilterToken_ = consumes< Bool_t >(ps.getParameter<InputTag>("passedHBHENoiseFilter"));
 
   /////////PHOTON AND ELECTRON ID
   // electron ID 
@@ -122,6 +136,19 @@ hltPrescaleProvider_(ps, consumesCollector(), *this)
   phoNeutralHadronIsolationToken_ = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoNeutralHadronIsolation"));
   phoPhotonIsolationToken_        = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoPhotonIsolation"));
   phoWorstChargedIsolationToken_  = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoWorstChargedIsolation"));
+
+  /*
+  /////OOT photons
+  ootPhoLooseIdMapToken_             = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("ootPhoLooseIdMap"));
+  ootPhoMediumIdMapToken_            = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("ootPhoMediumIdMap"));
+  ootPhoTightIdMapToken_             = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("ootPhoTightIdMap"));
+  ootPhoMVAValuesMapToken_           = consumes<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("ootPhoMVAValuesMap")); 
+  ootPhoChargedIsolationToken_       = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("ootPhoChargedIsolation"));
+  ootPhoNeutralHadronIsolationToken_ = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("ootPhoNeutralHadronIsolation"));
+  ootPhoPhotonIsolationToken_        = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("ootPhoPhotonIsolation"));
+  ootPhoWorstChargedIsolationToken_  = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("ootPhoWorstChargedIsolation"));
+  */
+
   /////////END of PHOTON AND ELECTRON ID
 
   offlinebeamSpot_ = consumes<reco::BeamSpot>(ps.getParameter<edm::InputTag>("offlineBeamSpot"));
@@ -149,6 +176,8 @@ hltPrescaleProvider_(ps, consumesCollector(), *this)
   singlelegsigma2PixFwd = ps.getParameter<double>( "singlelegsigma2PixFwd" );
   singlelegsigma2Tid    = ps.getParameter<double>( "singlelegsigma2Tid" );
   singlelegsigma2Tec    = ps.getParameter<double>( "singlelegsigma2Tec" );
+
+
 
   Service<TFileService> fs;
   tree_    = fs->make<TTree>("EventTree", "Event data");

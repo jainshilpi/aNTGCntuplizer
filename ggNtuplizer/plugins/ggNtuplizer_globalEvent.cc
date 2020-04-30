@@ -31,6 +31,13 @@ Float_t     ecalPrefireW_;
 Float_t     ecalPrefireWup_;
 Float_t     ecalPrefireWdn_;
 UShort_t    beamHaloSummary_;
+Int_t       ndofVtx_;
+Float_t     sumPtVtx_;
+Float_t     chisqVtx_;
+Float_t     nTracksVtx_;
+
+Int_t      l1BitPass_;
+
 
 void ggNtuplizer::branchesGlobalEvent(TTree* tree) {
 
@@ -44,6 +51,12 @@ void ggNtuplizer::branchesGlobalEvent(TTree* tree) {
   tree->Branch("vtx",                  &vtx_);
   tree->Branch("vty",                  &vty_);
   tree->Branch("vtz",                  &vtz_);
+
+  tree->Branch("ndofVtx_",                  &ndofVtx_);
+  tree->Branch("sumPtVtx_",                  &sumPtVtx_);
+  tree->Branch("chisqVtx_",                  &chisqVtx_);
+  tree->Branch("nTracksVtx_",                  &nTracksVtx_);
+
   tree->Branch("rho",                  &rho_);
   tree->Branch("rhoCentral",           &rhoCentral_);
   tree->Branch("HLTEleMuX",            &HLTEleMuX_);
@@ -62,6 +75,8 @@ void ggNtuplizer::branchesGlobalEvent(TTree* tree) {
   }
 
   tree->Branch("beamHaloSummary",    &beamHaloSummary_);
+
+  tree->Branch("l1BitPass",    &l1BitPass_);
 
 }
 
@@ -117,9 +132,19 @@ void ggNtuplizer::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es
 
   nVtx_     = -1;
   nGoodVtx_ = -1;
+  ndofVtx_ = -99;
+  sumPtVtx_ = -99;
+  chisqVtx_ = -999;
+  nTracksVtx_ = -999;
+
+
+  
   if (vtxHandle.isValid()) {
     nVtx_     = 0;
     nGoodVtx_ = 0;
+    
+    
+    
 
     for (vector<reco::Vertex>::const_iterator v = vtxHandle->begin(); v != vtxHandle->end(); ++v) {
 
@@ -130,12 +155,26 @@ void ggNtuplizer::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es
 
        isPVGood_ = false;
        if (!v->isFake() && v->ndof() > 4. && fabs(v->z()) <= 24. && fabs(v->position().rho()) <= 2.) isPVGood_ = true;
-     }
+
+
+       ndofVtx_  = v->ndof();
+       sumPtVtx_ = v->p4().pt();
+       chisqVtx_ = v->chi2();
+       nTracksVtx_ = v->nTracks();
+	 
+      }
 
      if (!v->isFake() && v->ndof() > 4. && fabs(v->z()) <= 24. && fabs(v->position().rho()) <= 2.) nGoodVtx_++;
+     
      nVtx_++;
+     
 
-   }
+
+     
+    }
+    
+
+  
  } else
  edm::LogWarning("ggNtuplizer") << "Primary vertices info not unavailable";
 
@@ -489,5 +528,55 @@ void ggNtuplizer::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es
     e.getByToken(prefweightdown_token, theprefweightdown ) ;
     ecalPrefireWdn_ = (*theprefweightdown);
   }
+
+  ///store L1 bits: https://twiki.cern.ch/twiki/bin/view/CMS/TriggerResultsFilter#Use_as_a_Selector_AN1
+  l1BitPass_ = 0;
+  
+  ///either bunch
+  if (m_triggerSelector && m_triggerCache.setEvent(e, es)) {
+    // if the L1 or HLT configurations have changed, (re)initialize the filters (including during the first event)
+    if (m_triggerCache.configurationUpdated())
+      m_triggerSelector ->init(m_triggerCache);
+    
+    bool result = (*m_triggerSelector)(m_triggerCache);
+    
+    if(result) l1BitPass_ += pow(2,0);
+  }//if (m_triggerSelector && m_triggerCache.setEvent(e, es))
+
+
+  ///PBs
+  if (m_triggerSelectorPB && m_triggerCache.setEvent(e, es)) {
+    // if the L1 or HLT configurations have changed, (re)initialize the filters (including during the first event)
+    if (m_triggerCache.configurationUpdated())
+      m_triggerSelectorPB ->init(m_triggerCache);
+    
+    bool result = (*m_triggerSelectorPB)(m_triggerCache);
+    
+    if(result) l1BitPass_ += pow(2,1);
+  }//if (m_triggerSelector && m_triggerCache.setEvent(e, es))
+
+
+  ///MBs
+  if (m_triggerSelectorMB && m_triggerCache.setEvent(e, es)) {
+    // if the L1 or HLT configurations have changed, (re)initialize the filters (including during the first event)
+    if (m_triggerCache.configurationUpdated())
+      m_triggerSelectorMB ->init(m_triggerCache);
+    
+    bool result = (*m_triggerSelectorMB)(m_triggerCache);
+    
+    if(result) l1BitPass_ += pow(2,2);
+  }//if (m_triggerSelector && m_triggerCache.setEvent(e, es))
+
+  
+  ///ZBs
+  if (m_triggerSelectorZB && m_triggerCache.setEvent(e, es)) {
+    // if the L1 or HLT configurations have changed, (re)initialize the filters (including during the first event)
+    if (m_triggerCache.configurationUpdated())
+      m_triggerSelectorZB ->init(m_triggerCache);
+    
+    bool result = (*m_triggerSelectorZB)(m_triggerCache);
+    
+    if(result) l1BitPass_ += pow(2,2);
+  }//if (m_triggerSelector && m_triggerCache.setEvent(e, es))
 
 }
