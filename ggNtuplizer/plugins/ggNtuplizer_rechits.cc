@@ -85,6 +85,7 @@ vector<Float_t> ebrhPhi_;
 vector<Float_t> ebrhX_;
 vector<Float_t> ebrhY_;
 vector<Float_t> ebrhZ_;
+vector<Int_t> ebrhDetID_;
 
 /////EE
 Int_t neeRH_;
@@ -97,7 +98,7 @@ vector<Float_t> eerhPhi_;
 vector<Float_t> eerhX_;
 vector<Float_t> eerhY_;
 vector<Float_t> eerhZ_;
-
+vector<Int_t> eerhDetID_;
 
 /////ES
 Int_t nesRH_;
@@ -258,6 +259,7 @@ void ggNtuplizer::branchesRecHit(TTree* tree) {
   tree->Branch("ebrhX",         &ebrhX_);
   tree->Branch("ebrhY",         &ebrhY_);
   tree->Branch("ebrhZ",         &ebrhZ_);
+  tree->Branch("ebrhDetID",         &ebrhDetID_);
 
   ///EE
   tree->Branch("neeRH",         &neeRH_);
@@ -270,6 +272,7 @@ void ggNtuplizer::branchesRecHit(TTree* tree) {
   tree->Branch("eerhX",         &eerhX_);
   tree->Branch("eerhY",         &eerhY_);
   tree->Branch("eerhZ",         &eerhZ_);
+  tree->Branch("eerhDetID",         &eerhDetID_);
 
   ///ES
   tree->Branch("nesRH",         &nesRH_);
@@ -511,7 +514,8 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
   ebrhX_.clear();
   ebrhY_.clear();
   ebrhZ_.clear();
-
+  ebrhDetID_.clear();
+  
   //EE
   neeRH_ = 0;  
 
@@ -525,6 +529,7 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
   eerhX_.clear();
   eerhY_.clear();
   eerhZ_.clear();
+  eerhDetID_.clear();
 
   //ES
   nesRH_ = 0;  
@@ -794,7 +799,7 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
     }
 
     EBDetId det = ebrechit->id();
-
+    
     if(debugRH){
       std::cout<<"detID "<<det<<std::endl;
     }
@@ -808,11 +813,14 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
     int iphi = det.iphi();
     int zside = det.zside();
 
+    uint32_t detid = det.rawId();
     ebrhE_.push_back(Energy);
     ebrhiEta_.push_back(ieta);
     ebrhiPhi_.push_back(iphi);
     ebrhZside_.push_back(zside);
-
+    
+    ebrhDetID_.push_back(detid);
+    
     const GlobalPoint & rechitPoint = geo->getPosition(det);
     ebrhEta_.push_back(rechitPoint.eta());
 
@@ -845,11 +853,14 @@ void ggNtuplizer::fillRecHits(const edm::Event& e, const edm::EventSetup& es){
     int iphi = det.iy();
     int zside = det.zside();
 
+    uint32_t detid = det.rawId();
+
     eerhE_.push_back(Energy);
     eerhiEta_.push_back(ieta);
     eerhiPhi_.push_back(iphi);
     eerhZside_.push_back(zside);
-
+    eerhDetID_.push_back(detid);
+    
     const GlobalPoint & rechitPoint = geo->getPosition(det);
     eerhEta_.push_back(rechitPoint.eta());
     eerhPhi_.push_back(rechitPoint.phi());
