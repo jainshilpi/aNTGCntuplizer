@@ -576,7 +576,7 @@ void ggNtuplizer::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es
     
     bool result = (*m_triggerSelectorZB)(m_triggerCache);
     
-    if(result) l1BitPass_ += pow(2,2);
+    if(result) l1BitPass_ += pow(2,3);
   }//if (m_triggerSelector && m_triggerCache.setEvent(e, es))
 
 }
