@@ -47,7 +47,10 @@
 #include "HLTrigger/HLTcore/interface/TriggerExpressionEvaluator.h"
 #include "HLTrigger/HLTcore/interface/TriggerExpressionParser.h"
 
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidateFwd.h"
 
+#include "DataFormats/EgammaReco/interface/HFEMClusterShapeAssociation.h"
 
 #include "iterator"
 
@@ -101,6 +104,8 @@ private:
   void branchesAK8PUPPIJets    (TTree*);
   void branchesRecHit(TTree* tree);
   
+  void branchesHFElectrons  (TTree*);
+
   void fillGlobalEvent(const edm::Event&, const edm::EventSetup&);
   void fillGenInfo    (const edm::Event&);
   void fillGenPart    (const edm::Event&);
@@ -108,6 +113,9 @@ private:
   void fillPhotons    (const edm::Event&, const edm::EventSetup&);
   void fillPhotonsOOT    (const edm::Event&, const edm::EventSetup&);
   void fillElectrons  (const edm::Event&, const edm::EventSetup&, math::XYZPoint&);
+
+  void fillHFElectrons  (const edm::Event&, const edm::EventSetup&, math::XYZPoint&);
+
   // void fillHFElectrons(const edm::Event&);
   void fillMuons      (const edm::Event&, math::XYZPoint&, const reco::Vertex);
   void fillAK4CHSJets       (const edm::Event&, const edm::EventSetup&);
@@ -216,6 +224,8 @@ private:
 
   edm::EDGetTokenT<CSCSegmentCollection>         cscSegmentsCollection_;
 
+  edm::EDGetTokenT<reco::RecoEcalCandidateCollection>      hfelectronCollection_;
+
   Bool_t                                            getECALprefiringWeights_;
   edm::EDGetTokenT<double>                          prefweight_token;
   edm::EDGetTokenT<double>                          prefweightup_token;
@@ -257,6 +267,9 @@ private:
   edm::EDGetTokenT<edm::ValueMap<bool> >  eleTightIdMapToken_;
   edm::EDGetTokenT<edm::ValueMap<bool> >  eleHEEPIdMapToken_;
   edm::EDGetTokenT<edm::ValueMap<float> > eleMVAValuesMapToken_;
+
+
+  edm::EDGetTokenT<reco::HFEMClusterShapeAssociationCollection> hfclustersHFEM_;
 
   edm::ESHandle<CaloGeometry>          pG_;
   

@@ -68,6 +68,11 @@ ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) :
   genParticlesCollection_     = consumes<vector<reco::GenParticle> >    (ps.getParameter<InputTag>("genParticleSrc"));
   pfMETlabel_                 = consumes<View<pat::MET> >               (ps.getParameter<InputTag>("pfMETLabel"));
   electronCollection_         = consumes<View<pat::Electron> >          (ps.getParameter<InputTag>("electronSrc"));
+
+  hfelectronCollection_         = consumes<reco::RecoEcalCandidateCollection>  (ps.getParameter<InputTag>("hfelectronSrc"));
+
+  hfclustersHFEM_               = consumes<reco::HFEMClusterShapeAssociationCollection>(ps.getParameter<edm::InputTag>("hfclusters"));
+
   gsfTracks_                  = consumes<View<reco::GsfTrack>>          (ps.getParameter<InputTag>("gsfTrackSrc"));
   hbheRecHitCollection_                 = consumes<HBHERecHitCollection >               (ps.getParameter<InputTag>("hbheRecHitCollection"));
   hfRecHitCollection_                 = consumes<HFRecHitCollection >               (ps.getParameter<InputTag>("hfRecHitCollection"));

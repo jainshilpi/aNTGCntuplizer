@@ -44,6 +44,11 @@ ggNtuplizer = cms.EDAnalyzer("ggNtuplizer",
                              rhoCentralLabel      = cms.InputTag("fixedGridRhoFastjetCentralNeutral"),
                              pfMETLabel           = cms.InputTag("patMETs"),
                              electronSrc          = cms.InputTag("selectedPatElectrons"),
+
+                             hfelectronSrc          = cms.InputTag("hfRecoEcalCandidate"),
+                             hfclusters = cms.InputTag("hfEMClusters"),
+
+
                              #calibelectronSrc     = cms.InputTag("calibratedPatElectrons"),
                              calibelectronSrc     = cms.InputTag("selectedPatElectrons"),
                              photonSrc            = cms.InputTag("selectedPatPhotons"),
