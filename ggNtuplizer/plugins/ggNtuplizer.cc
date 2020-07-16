@@ -204,6 +204,8 @@ ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) :
     branchesECALOOTSC(tree_);
   }
   branchesElectrons(tree_);
+  branchesHFElectrons(tree_);
+
   branchesMuons(tree_);
   if (dumpJets_)        branchesAK4CHSJets(tree_);
   if (dumpAK8Jets_)     branchesAK8PUPPIJets(tree_);
@@ -263,6 +265,8 @@ void ggNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es) {
 
   if(debug) std::cout<<"Doing Electrons"<<std::endl;
   fillElectrons(e, es, pv);
+
+  fillHFElectrons(e, es, pv);
 
   if(debug) std::cout<<"Doing Muons"<<std::endl;
   fillMuons(e, pv, vtx);
